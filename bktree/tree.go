@@ -2,7 +2,6 @@ package bktree
 
 import (
 	"container/list"
-	"errors"
 	"math"
 )
 
@@ -24,7 +23,7 @@ func NewBkTree(rootWord []byte, seed int32) *BkTree {
 }
 
 func (bk *BkTree) Add(word []byte, data int32) {
-	distance, _ := MeyersDifferenceAlgorithm(bk.root.Word, word)
+	distance := MeyersDifferenceAlgorithm(bk.root.Word, word)
 	bk.addNode(bk.root, word, data, uint(distance))
 }
 
@@ -63,7 +62,7 @@ func (bk *BkTree) searchNode(node *Node, queryWord []byte, tolerance int) []Sear
 
 	for nodeQueue.Len() > 0 {
 		currentNode := nodeQueue.Remove(nodeQueue.Front()).(*Node)
-		distance, _ := MeyersDifferenceAlgorithm(currentNode.Word, queryWord)
+		distance := MeyersDifferenceAlgorithm(currentNode.Word, queryWord)
 
 		if distance <= tolerance {
 			result = append(result, SearchResult{
@@ -87,13 +86,15 @@ func isWithinTolerance(a, b uint, tolerance int) bool {
 	return int(math.Abs(float64(a)-float64(b))) <= tolerance
 }
 
-func MeyersDifferenceAlgorithm(s1 []byte, s2 []byte) (int, error) {
+func MeyersDifferenceAlgorithm(s1 []byte, s2 []byte) int {
+
 	if len(s1) == 0 {
-		return 0, errors.New("value cannot be an empty collection")
+		return len(s2) // Return the length of s2 as the score
 	}
 	if len(s2) == 0 {
-		return 0, errors.New("value cannot be an empty collection")
+		return len(s1) // Return the length of s1 as the score
 	}
+
 	score := len(s2)
 
 	peq := make([]int64, 256)
@@ -134,5 +135,5 @@ func MeyersDifferenceAlgorithm(s1 []byte, s2 []byte) (int, error) {
 		mv = ph & xv
 	}
 
-	return score, nil
+	return score
 }

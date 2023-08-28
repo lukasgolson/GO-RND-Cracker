@@ -2,6 +2,8 @@ package main
 
 import (
 	"awesomeProject/bktree"
+	bk_tree "awesomeProject/file-format"
+	"capnproto.org/go/capnp/v3"
 	"encoding/binary"
 	"fmt"
 	"log"
@@ -73,6 +75,24 @@ func processPartition(lo, hi int64, randSource *rand.Rand) error {
 	}
 
 	return nil
+}
+
+func serializeTree(rootNode bktree.Node) {
+
+	arena := capnp.SingleSegment(nil)
+
+	_, seg, err := capnp.NewMessage(arena)
+	if err != nil {
+		panic(err)
+	}
+
+	treeRoot, err := bk_tree.NewRootNode(seg)
+	if err != nil {
+		panic(err)
+	}
+
+	treeRoot.SetSeed(rootNode.Seed)
+
 }
 
 func main() {
