@@ -1,17 +1,15 @@
 package bktree
 
 type Node struct {
-	Distance uint
-	Word     []byte
-	Seed     int32
-	Children []*Node
+	ID   uint
+	Word []byte
+	Seed int32
 }
 
-func NewNode(distance uint, word []byte, seed int32) *Node {
+func NewNode(ID uint, word []byte, seed int32) *Node {
 	return &Node{
-		Distance: distance,
-		Word:     word,
-		Seed:     seed,
-		Children: []*Node{},
+		ID:   ID,
+		Word: word,
+		Seed: seed,
 	}
 }

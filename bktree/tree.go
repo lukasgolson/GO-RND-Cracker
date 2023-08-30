@@ -12,46 +12,33 @@ type SearchResult struct {
 }
 
 type BkTree struct {
-	root *Node
+	Nodes []*Node
+	Edges []*Edge
 }
 
 func NewBkTree(rootWord []byte, seed int32) *BkTree {
-	root := NewNode(math.MaxUint8, rootWord, seed)
+	root := NewNode(0, rootWord, seed)
+	nodes := []*Node{root}
 	return &BkTree{
-		root: root,
+		Nodes: nodes,
+		Edges: nil,
 	}
 }
 
 func (bk *BkTree) Add(word []byte, data int32) {
-	distance := MeyersDifferenceAlgorithm(bk.root.Word, word)
-	bk.addNode(bk.root, word, data, uint(distance))
+	distance := MeyersDifferenceAlgorithm(bk.Nodes[0].Word, word)
+	newNode := NewNode(uint(len(bk.Nodes)), word, data)
+	bk.Nodes = append(bk.Nodes, newNode)
+	bk.addEdge(0, newNode.ID, distance)
 }
 
-func (bk *BkTree) addNode(node *Node, word []byte, data int32, distance uint) {
-	for {
-		foundNode := findNodeWithDistance(node, distance)
-		if foundNode != nil {
-			node = foundNode
-			continue
-		}
-
-		newNode := NewNode(distance, word, data)
-		node.Children = append(node.Children, newNode)
-		break
-	}
-}
-
-func findNodeWithDistance(node *Node, distance uint) *Node {
-	for _, child := range node.Children {
-		if child.Distance == distance {
-			return child
-		}
-	}
-	return nil
+func (bk *BkTree) addEdge(parentID uint, childID uint, distance uint) {
+	edge := NewEdge(parentID, childID, distance)
+	bk.Edges = append(bk.Edges, edge)
 }
 
 func (bk *BkTree) Search(queryWord []byte, tolerance int) []SearchResult {
-	result := bk.searchNode(bk.root, queryWord, tolerance)
+	result := bk.searchNode(bk.Nodes[0], queryWord, tolerance)
 	return result
 }
 
@@ -64,17 +51,17 @@ func (bk *BkTree) searchNode(node *Node, queryWord []byte, tolerance int) []Sear
 		currentNode := nodeQueue.Remove(nodeQueue.Front()).(*Node)
 		distance := MeyersDifferenceAlgorithm(currentNode.Word, queryWord)
 
-		if distance <= tolerance {
+		if distance <= uint(tolerance) {
 			result = append(result, SearchResult{
 				Word:     currentNode.Word,
 				Seed:     int(currentNode.Seed),
-				Distance: distance,
+				Distance: int(distance),
 			})
 		}
 
-		for _, currentNodeChild := range currentNode.Children {
-			if isWithinTolerance(currentNodeChild.Distance, uint(distance), tolerance) {
-				nodeQueue.PushBack(currentNodeChild)
+		for _, edge := range bk.Edges {
+			if edge.ParentIndex == currentNode.ID && isWithinTolerance(edge.Distance, distance, tolerance) {
+				nodeQueue.PushBack(bk.Nodes[edge.ChildIndex])
 			}
 		}
 	}
@@ -86,16 +73,16 @@ func isWithinTolerance(a, b uint, tolerance int) bool {
 	return int(math.Abs(float64(a)-float64(b))) <= tolerance
 }
 
-func MeyersDifferenceAlgorithm(s1 []byte, s2 []byte) int {
+func MeyersDifferenceAlgorithm(s1 []byte, s2 []byte) uint {
 
 	if len(s1) == 0 {
-		return len(s2) // Return the length of s2 as the score
+		return uint(len(s2)) // Return the length of s2 as the score
 	}
 	if len(s2) == 0 {
-		return len(s1) // Return the length of s1 as the score
+		return uint(len(s1)) // Return the length of s1 as the score
 	}
 
-	score := len(s2)
+	score := uint(len(s2))
 
 	peq := make([]int64, 256)
 	var i int
