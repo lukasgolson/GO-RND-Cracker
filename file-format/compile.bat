@@ -1,1 +1,0 @@
-capnp compile -I std -ogo tree.capnp
