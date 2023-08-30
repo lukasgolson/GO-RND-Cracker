@@ -3,6 +3,7 @@ package bktree
 import (
 	"awesomeProject/internal/algorithms"
 	"container/list"
+	"fmt"
 	"math"
 )
 
@@ -34,10 +35,19 @@ func (bkTree *BkTree) searchNodes(node *Node, queryWord []byte, tolerance int) [
 			})
 		}
 
-		for _, edge := range bkTree.Edges {
+		edgeIterator := NewEdgeIterator(bkTree)
+
+		for edgeIterator.HasNext() {
+			edge, err := edgeIterator.Next()
+			if err != nil {
+				fmt.Println("Error:", err)
+				break
+			}
+
 			if edge.ParentIndex == currentNode.ID && isWithinTolerance(edge.Distance, distance, tolerance) {
 				nodeQueue.PushBack(bkTree.Nodes[edge.ChildIndex])
 			}
+
 		}
 	}
 
@@ -49,10 +59,22 @@ func isWithinTolerance(a, b uint16, tolerance int) bool {
 }
 
 func (bkTree *BkTree) findChildWithDistance(node *Node, distance uint16) *Node {
-	for _, edge := range bkTree.Edges {
-		if edge.ParentIndex == node.ID && edge.Distance == distance {
-			return bkTree.Nodes[edge.ChildIndex]
+
+	edgeIterator := NewEdgeIterator(bkTree)
+
+	for edgeIterator.HasNext() {
+		edge, err := edgeIterator.Next()
+		if err != nil {
+			fmt.Println("Error:", err)
+			break
 		}
+
+		if edge.ParentIndex == node.ID && edge.Distance == distance {
+			node, err = bkTree.GetNodeAtIndex(int(edge.ChildIndex))
+			return node
+		}
+
 	}
+
 	return nil
 }

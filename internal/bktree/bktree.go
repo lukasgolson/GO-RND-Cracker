@@ -2,21 +2,18 @@ package bktree
 
 import (
 	"fmt"
+	"github.com/edsrzf/mmap-go"
 	"os"
-	"unsafe"
 )
 
 type BkTree struct {
-	Root      *Node
-	Nodes     []*Node
-	Edges     []*Edge
-	closing   bool
-	nodesFile *os.File
-	edgesFile *os.File
+	Root  *Node
+	Nodes mmap.MMap
+	Edges mmap.MMap
 
-	//Cache the size of a single node and edge
-	nodeSize int
-	edgeSize int
+	NodeFile *os.File
+	EdgeFile *os.File
+	closing  bool
 }
 
 func NewBkTree(filename string) (*BkTree, error) {
@@ -25,34 +22,19 @@ func NewBkTree(filename string) (*BkTree, error) {
 	nodesFilename := fmt.Sprintf("%s.nodes", filename)
 	edgesFilename := fmt.Sprintf("%s.edges", filename)
 
-	nodesFile, err := os.OpenFile(nodesFilename, os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		return nil, err
-	}
-	bkTree.nodesFile = nodesFile
+	var err error
 
-	edgesFile, err := os.OpenFile(edgesFilename, os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		nodesFile.Close()
-		return nil, err
-	}
-	bkTree.edgesFile = edgesFile
+	bkTree.NodeFile, err = os.OpenFile(nodesFilename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.FileMode(0644))
 
-	bkTree.nodeSize = int(unsafe.Sizeof(Node{})) // Cache the size
-	bkTree.edgeSize = int(unsafe.Sizeof(Edge{})) // Cache the size
+	bkTree.EdgeFile, err = os.OpenFile(edgesFilename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.FileMode(0644))
 
-	defer func() {
-		if err != nil {
-			bkTree.Close()
-		}
-	}()
+	bkTree.NodeFile.Truncate(1024 * 1024)
+	bkTree.EdgeFile.Truncate(1024 * 1024)
 
-	bkTree.Nodes, err = mapNodes(nodesFile.Name(), 1024*8)
-	if err != nil {
-		return nil, err
-	}
+	bkTree.Nodes, err = mmap.Map(bkTree.NodeFile, mmap.RDWR, 0)
 
-	bkTree.Edges, err = mapEdges(edgesFile.Name(), 1024*8)
+	bkTree.Edges, err = mmap.Map(bkTree.EdgeFile, mmap.RDWR, 0)
+
 	if err != nil {
 		return nil, err
 	}
@@ -66,12 +48,20 @@ func (bkTree *BkTree) Close() error {
 	}
 	bkTree.closing = true
 
-	if bkTree.nodesFile != nil {
-		bkTree.nodesFile.Close()
+	var err error // Declare err variable
+
+	if bkTree.Nodes != nil {
+		err = bkTree.Nodes.Unmap()
+		err = bkTree.NodeFile.Close()
 	}
 
-	if bkTree.edgesFile != nil {
-		bkTree.edgesFile.Close()
+	if bkTree.Edges != nil {
+		err = bkTree.Edges.Unmap()
+		err = bkTree.EdgeFile.Close()
+	}
+
+	if err != nil {
+		return err
 	}
 
 	return nil

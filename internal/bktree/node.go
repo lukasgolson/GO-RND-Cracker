@@ -5,6 +5,10 @@ import (
 	"io"
 )
 
+const nodeWordLength = 32
+
+const nodeByteSize = 8 + nodeWordLength
+
 type Node struct {
 	ID   uint32
 	Word []byte
@@ -21,19 +25,13 @@ func NewNode(ID uint32, word []byte, seed int32) *Node {
 
 func (node *Node) SerializeToBinaryStream(writer io.Writer) error {
 	idBytes := make([]byte, 4)
-	binary.LittleEndian.PutUint32(idBytes, uint32(node.ID))
+	binary.LittleEndian.PutUint32(idBytes, node.ID)
 	_, err := writer.Write(idBytes)
 	if err != nil {
 		return err
 	}
 
-	wordLenBytes := make([]byte, 2)
-	binary.LittleEndian.PutUint16(wordLenBytes, uint16(len(node.Word)))
-	_, err = writer.Write(wordLenBytes)
-	if err != nil {
-		return err
-	}
-	_, err = writer.Write(node.Word)
+	_, err = writer.Write(node.Word[:])
 	if err != nil {
 		return err
 	}
@@ -46,4 +44,26 @@ func (node *Node) SerializeToBinaryStream(writer io.Writer) error {
 	}
 
 	return nil
+}
+
+func DeserializeNodeFromBinaryStream(reader io.Reader) (*Node, error) {
+	data := make([]byte, 8+nodeWordLength)
+
+	_, err := io.ReadFull(reader, data)
+	if err != nil {
+		return nil, err
+	}
+
+	nodeID := binary.LittleEndian.Uint32(data[:4])
+
+	seed := binary.LittleEndian.Uint32(data[4:8])
+
+	word := make([]byte, nodeWordLength)
+	copy(word, data[8:8+nodeWordLength])
+
+	return &Node{
+		ID:   nodeID,
+		Word: word,
+		Seed: int32(seed),
+	}, nil
 }
