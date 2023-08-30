@@ -12,6 +12,7 @@ type SearchResult struct {
 }
 
 type BkTree struct {
+	Root  *Node
 	Nodes []*Node
 	Edges []*Edge
 }
@@ -21,6 +22,7 @@ func NewBkTree(rootWord []byte, seed int32) *BkTree {
 	nodes := []*Node{root}
 	var edges []*Edge
 	return &BkTree{
+		Root:  root,
 		Nodes: nodes,
 		Edges: edges,
 	}
@@ -33,30 +35,30 @@ func (bk *BkTree) Add(word []byte, data int32) {
 		return
 	}
 
-	u := bk.Nodes[0] // Start from the root node
+	currentNode := bk.Root // Start from the root node
 
-	for u != nil {
-		k := MeyersDifferenceAlgorithm(u.Word, word)
+	for currentNode != nil {
+		wordDistance := MeyersDifferenceAlgorithm(currentNode.Word, word)
 
-		if k == 0 {
+		if wordDistance == 0 {
 			return // Node already exists, do nothing
 		}
 
-		v := bk.findChildWithDistance(u, k)
+		v := bk.findChildWithDistance(currentNode, wordDistance)
 
 		if v == nil {
-			newNode := NewNode(uint(len(bk.Nodes)), word, data)
-			edge := NewEdge(u.ID, newNode.ID, k)
+			newNode := NewNode(uint32(len(bk.Nodes)), word, data)
+			edge := NewEdge(currentNode.ID, newNode.ID, wordDistance)
 			bk.Nodes = append(bk.Nodes, newNode)
 			bk.Edges = append(bk.Edges, edge)
 			return
 		}
 
-		u = v // Move down the tree to the next node
+		currentNode = v // Move down the tree to the next node
 	}
 }
 
-func (bk *BkTree) findChildWithDistance(node *Node, distance uint) *Node {
+func (bk *BkTree) findChildWithDistance(node *Node, distance uint16) *Node {
 	for _, edge := range bk.Edges {
 		if edge.ParentIndex == node.ID && edge.Distance == distance {
 			return bk.Nodes[edge.ChildIndex]
@@ -66,11 +68,11 @@ func (bk *BkTree) findChildWithDistance(node *Node, distance uint) *Node {
 }
 
 func (bk *BkTree) Search(queryWord []byte, tolerance int) []SearchResult {
-	result := bk.searchNode(bk.Nodes[0], queryWord, tolerance)
+	result := bk.searchNodes(bk.Root, queryWord, tolerance)
 	return result
 }
 
-func (bk *BkTree) searchNode(node *Node, queryWord []byte, tolerance int) []SearchResult {
+func (bk *BkTree) searchNodes(node *Node, queryWord []byte, tolerance int) []SearchResult {
 	var result []SearchResult
 	nodeQueue := list.New()
 	nodeQueue.PushBack(node)
@@ -79,7 +81,7 @@ func (bk *BkTree) searchNode(node *Node, queryWord []byte, tolerance int) []Sear
 		currentNode := nodeQueue.Remove(nodeQueue.Front()).(*Node)
 		distance := MeyersDifferenceAlgorithm(currentNode.Word, queryWord)
 
-		if distance <= uint(tolerance) {
+		if distance <= uint16(tolerance) {
 			result = append(result, SearchResult{
 				Word:     currentNode.Word,
 				Seed:     int(currentNode.Seed),
@@ -97,20 +99,20 @@ func (bk *BkTree) searchNode(node *Node, queryWord []byte, tolerance int) []Sear
 	return result
 }
 
-func isWithinTolerance(a, b uint, tolerance int) bool {
+func isWithinTolerance(a, b uint16, tolerance int) bool {
 	return int(math.Abs(float64(a)-float64(b))) <= tolerance
 }
 
-func MeyersDifferenceAlgorithm(s1 []byte, s2 []byte) uint {
+func MeyersDifferenceAlgorithm(s1 []byte, s2 []byte) uint16 {
 
 	if len(s1) == 0 {
-		return uint(len(s2)) // Return the length of s2 as the score
+		return uint16(len(s2)) // Return the length of s2 as the score
 	}
 	if len(s2) == 0 {
-		return uint(len(s1)) // Return the length of s1 as the score
+		return uint16(len(s1)) // Return the length of s1 as the score
 	}
 
-	score := uint(len(s2))
+	score := uint16(len(s2))
 
 	peq := make([]int64, 256)
 	var i int
@@ -125,7 +127,7 @@ func MeyersDifferenceAlgorithm(s1 []byte, s2 []byte) uint {
 
 	var mv int64 = 0
 	var pv int64 = -1
-	var last int64 = int64(1) << uint(len(s2)-1)
+	var last = int64(1) << uint(len(s2)-1)
 
 	for i = 0; i < len(s1); i++ {
 		eq := peq[s1[i]]
