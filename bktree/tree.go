@@ -19,22 +19,50 @@ type BkTree struct {
 func NewBkTree(rootWord []byte, seed int32) *BkTree {
 	root := NewNode(0, rootWord, seed)
 	nodes := []*Node{root}
+	var edges []*Edge
 	return &BkTree{
 		Nodes: nodes,
-		Edges: nil,
+		Edges: edges,
 	}
 }
 
 func (bk *BkTree) Add(word []byte, data int32) {
-	distance := MeyersDifferenceAlgorithm(bk.Nodes[0].Word, word)
-	newNode := NewNode(uint(len(bk.Nodes)), word, data)
-	bk.Nodes = append(bk.Nodes, newNode)
-	bk.addEdge(0, newNode.ID, distance)
+	if len(bk.Nodes) == 0 {
+		root := NewNode(0, word, data)
+		bk.Nodes = append(bk.Nodes, root)
+		return
+	}
+
+	u := bk.Nodes[0] // Start from the root node
+
+	for u != nil {
+		k := MeyersDifferenceAlgorithm(u.Word, word)
+
+		if k == 0 {
+			return // Node already exists, do nothing
+		}
+
+		v := bk.findChildWithDistance(u, k)
+
+		if v == nil {
+			newNode := NewNode(uint(len(bk.Nodes)), word, data)
+			edge := NewEdge(u.ID, newNode.ID, k)
+			bk.Nodes = append(bk.Nodes, newNode)
+			bk.Edges = append(bk.Edges, edge)
+			return
+		}
+
+		u = v // Move down the tree to the next node
+	}
 }
 
-func (bk *BkTree) addEdge(parentID uint, childID uint, distance uint) {
-	edge := NewEdge(parentID, childID, distance)
-	bk.Edges = append(bk.Edges, edge)
+func (bk *BkTree) findChildWithDistance(node *Node, distance uint) *Node {
+	for _, edge := range bk.Edges {
+		if edge.ParentIndex == node.ID && edge.Distance == distance {
+			return bk.Nodes[edge.ChildIndex]
+		}
+	}
+	return nil
 }
 
 func (bk *BkTree) Search(queryWord []byte, tolerance int) []SearchResult {
