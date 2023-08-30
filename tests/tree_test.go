@@ -1,7 +1,7 @@
-package main
+package tests
 
 import (
-	"awesomeProject/bktree"
+	"awesomeProject/internal/bktree"
 	"testing"
 )
 
@@ -9,7 +9,9 @@ func TestBkTreeSearch(t *testing.T) {
 	// Create a BK tree with a root word and seed
 	rootWord := []byte("hello")
 	seed := int32(12345)
-	bk := bktree.NewBkTree(rootWord, seed)
+	bk, _ := bktree.NewBkTree("test")
+
+	bk.Add(rootWord, seed)
 
 	// Add words to the BK tree
 	wordsToAdd := [][]byte{

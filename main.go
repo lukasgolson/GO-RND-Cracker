@@ -1,7 +1,7 @@
 package main
 
 import (
-	"awesomeProject/bktree"
+	"awesomeProject/internal/bktree"
 	"encoding/binary"
 	"fmt"
 	"log"
@@ -53,8 +53,7 @@ func generateRandomSequence(seed int64, randSource *rand.Rand) []byte {
 func processPartition(lo, hi int64, randSource *rand.Rand) error {
 	batchSize := 1000
 
-	var sequence = generateRandomSequence(lo, randSource)
-	var tree = bktree.NewBkTree(sequence, int32(lo))
+	var tree, _ = bktree.NewBkTree("main")
 
 	var counter = 0
 
@@ -67,16 +66,10 @@ func processPartition(lo, hi int64, randSource *rand.Rand) error {
 
 		if counter <= batchSize {
 			tree.Add(sequence, int32(seed))
-		} else {
-			tree = bktree.NewBkTree(sequence, int32(seed))
 		}
 	}
 
 	return nil
-}
-
-func serializeTree(rootNode bktree.Node) {
-
 }
 
 func main() {

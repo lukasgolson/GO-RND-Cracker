@@ -1,7 +1,7 @@
-package bktree
+package interfaces
 
 import "io"
 
-type StreamSerializer interface {
+type Serializer interface {
 	SerializeToBinaryStream(writer io.Writer) error
 }
