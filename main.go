@@ -52,7 +52,7 @@ func generateRandomSequence(seed int64, randSource *rand.Rand) []byte {
 func processPartition(lo, hi int64, randSource *rand.Rand) error {
 	batchSize := 1000
 
-	var tree, _ = tree.NewTree("main")
+	//var tree, _ = tree.NewTree("main")
 
 	var counter = 0
 
@@ -60,11 +60,13 @@ func processPartition(lo, hi int64, randSource *rand.Rand) error {
 		seed := i
 		counter++
 
+		fmt.Printf("", seed)
+
 		// Generate the sequence based on the random source
-		var sequence = generateRandomSequence(seed, randSource)
+		//	var sequence = generateRandomSequence(seed, randSource)
 
 		if counter <= batchSize {
-			tree.Add(sequence, int32(seed))
+			//tree.Add(sequence, int32(seed))
 		}
 	}
 
