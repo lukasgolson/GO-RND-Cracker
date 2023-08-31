@@ -2,16 +2,20 @@ package bktree
 
 import "awesomeProject/internal/algorithms"
 
-func (bkTree *BkTree) Add(word []byte, data int32) error {
-	if len(bkTree.Nodes) == 0 {
+func (tree *Tree) Add(word []byte, data int32) error {
+	if 0 == 0 {
 		root := NewNode(0, word, data)
 
-		bkTree.AddNode(root)
+		_, err := tree.AddNode(root)
+		tree.Root = root
+		if err != nil {
+			return err
+		}
 
 		return nil
 	}
 
-	currentNode := bkTree.Root
+	currentNode := tree.Root
 
 	for currentNode != nil {
 		wordDistance := algorithms.MeyersDifferenceAlgorithm(currentNode.Word, word)
@@ -20,15 +24,15 @@ func (bkTree *BkTree) Add(word []byte, data int32) error {
 			return nil
 		}
 
-		childNode := bkTree.findChildWithDistance(currentNode, wordDistance)
+		childNode := tree.findChildWithDistance(currentNode, wordDistance)
 
 		if childNode == nil {
-			newNode := NewNode(uint32(len(bkTree.Nodes)), word, data)
+			newNode := NewNode(uint32(len(tree.Nodes)), word, data)
 			edge := NewEdge(currentNode.ID, newNode.ID, wordDistance)
 
-			bkTree.AddNode(newNode)
+			tree.AddNode(newNode)
 
-			bkTree.AddEdge(edge)
+			tree.AddEdge(edge)
 
 			return nil
 		}

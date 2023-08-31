@@ -1,7 +1,6 @@
 package main
 
 import (
-	"awesomeProject/internal/bktree"
 	"encoding/binary"
 	"fmt"
 	"log"
@@ -53,7 +52,7 @@ func generateRandomSequence(seed int64, randSource *rand.Rand) []byte {
 func processPartition(lo, hi int64, randSource *rand.Rand) error {
 	batchSize := 1000
 
-	var tree, _ = bktree.NewBkTree("main")
+	var tree, _ = tree.NewTree("main")
 
 	var counter = 0
 

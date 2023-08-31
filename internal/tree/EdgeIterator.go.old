@@ -6,11 +6,11 @@ import (
 )
 
 type EdgeIterator struct {
-	bkTree       *BkTree
+	bkTree       *Tree
 	currentIndex int
 }
 
-func NewEdgeIterator(bkTree *BkTree) *EdgeIterator {
+func NewEdgeIterator(bkTree *Tree) *EdgeIterator {
 	return &EdgeIterator{
 		bkTree:       bkTree,
 		currentIndex: 0,

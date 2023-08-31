@@ -13,12 +13,12 @@ type SearchResult struct {
 	Distance int
 }
 
-func (bkTree *BkTree) Search(queryWord []byte, tolerance int) []SearchResult {
-	result := bkTree.searchNodes(bkTree.Root, queryWord, tolerance)
+func (tree *Tree) Search(queryWord []byte, tolerance int) []SearchResult {
+	result := tree.searchNodes(tree.Root, queryWord, tolerance)
 	return result
 }
 
-func (bkTree *BkTree) searchNodes(node *Node, queryWord []byte, tolerance int) []SearchResult {
+func (tree *Tree) searchNodes(node *Node, queryWord []byte, tolerance int) []SearchResult {
 	var result []SearchResult
 	nodeQueue := list.New()
 	nodeQueue.PushBack(node)
@@ -35,7 +35,7 @@ func (bkTree *BkTree) searchNodes(node *Node, queryWord []byte, tolerance int) [
 			})
 		}
 
-		edgeIterator := NewEdgeIterator(bkTree)
+		edgeIterator := NewEdgeIterator(tree)
 
 		for edgeIterator.HasNext() {
 			edge, err := edgeIterator.Next()
@@ -45,7 +45,7 @@ func (bkTree *BkTree) searchNodes(node *Node, queryWord []byte, tolerance int) [
 			}
 
 			if edge.ParentIndex == currentNode.ID && isWithinTolerance(edge.Distance, distance, tolerance) {
-				nodeQueue.PushBack(bkTree.Nodes[edge.ChildIndex])
+				nodeQueue.PushBack(tree.Nodes[edge.ChildIndex])
 			}
 
 		}
@@ -58,9 +58,9 @@ func isWithinTolerance(a, b uint16, tolerance int) bool {
 	return int(math.Abs(float64(a)-float64(b))) <= tolerance
 }
 
-func (bkTree *BkTree) findChildWithDistance(node *Node, distance uint16) *Node {
+func (tree *Tree) findChildWithDistance(node *Node, distance uint16) *Node {
 
-	edgeIterator := NewEdgeIterator(bkTree)
+	edgeIterator := NewEdgeIterator(tree)
 
 	for edgeIterator.HasNext() {
 		edge, err := edgeIterator.Next()
@@ -70,7 +70,7 @@ func (bkTree *BkTree) findChildWithDistance(node *Node, distance uint16) *Node {
 		}
 
 		if edge.ParentIndex == node.ID && edge.Distance == distance {
-			node, err = bkTree.GetNodeAtIndex(int(edge.ChildIndex))
+			node, err = tree.GetNodeAtIndex(int(edge.ChildIndex))
 			return node
 		}
 
