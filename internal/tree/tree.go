@@ -1,15 +1,15 @@
 package tree
 
 import (
-	"awesomeProject/internal/memory"
+	"awesomeProject/internal/fileArray"
 	"fmt"
 )
 
 type Tree struct {
 	Root *Node
 
-	Nodes *memory.FileArray
-	Edges *memory.FileArray
+	Nodes *fileArray.FileArray
+	Edges *fileArray.FileArray
 
 	closing bool
 }
@@ -22,8 +22,8 @@ func NewTree(filename string) (*Tree, error) {
 
 	var err error
 
-	nodes, err := memory.NewFileArray(nodesFilename)
-	edges, err := memory.NewFileArray(edgesFilename)
+	nodes, err := fileArray.NewFileArray(nodesFilename)
+	edges, err := fileArray.NewFileArray(edgesFilename)
 
 	bkTree.Nodes = nodes
 	bkTree.Edges = edges

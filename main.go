@@ -57,10 +57,8 @@ func processPartition(lo, hi int64, randSource *rand.Rand) error {
 	var counter = 0
 
 	for i := lo + 1; i < hi; i++ {
-		seed := i
+		//seed := i
 		counter++
-
-		fmt.Printf("", seed)
 
 		// Generate the sequence based on the random source
 		//	var sequence = generateRandomSequence(seed, randSource)

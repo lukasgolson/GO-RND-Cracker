@@ -1,4 +1,4 @@
-package memory
+package fileArray
 
 import (
 	"awesomeProject/internal/interfaces"
@@ -6,32 +6,20 @@ import (
 	"fmt"
 )
 
-func AppendItem[T interfaces.Serializer[any]](fileArray *FileArray, item T) error {
-	serializationSize := item.SerializedSize()
-
-	var buffer bytes.Buffer
-	err := item.SerializeToBinaryStream(&buffer)
+func AppendItem[T interfaces.Serializer[T]](fileArray *FileArray, item T) error {
+	err := SetItemAtIndex(fileArray, item, fileArray.Count())
 	if err != nil {
 		return err
 	}
-
-	serializedItem := buffer.Bytes()
-
-	currentLength := fileArray.GetLength()
-
-	slice := fileArray.getSlice()
-
-	indexToOverwrite := currentLength * serializationSize
-
-	copy(slice[indexToOverwrite:indexToOverwrite+serializationSize], serializedItem)
-
-	fileArray.incrementLength()
-
 	return nil
 }
 
-func SetItemAtIndex[T interfaces.Serializer[any]](fileArray *FileArray, item T, index uint64) error {
+func SetItemAtIndex[T interfaces.Serializer[T]](fileArray *FileArray, item T, index uint64) error {
 	serializationSize := item.SerializedSize()
+
+	if index > fileArray.Count() {
+		return fmt.Errorf("index out of bounds")
+	}
 
 	var buffer bytes.Buffer
 	err := item.SerializeToBinaryStream(&buffer)
@@ -42,21 +30,37 @@ func SetItemAtIndex[T interfaces.Serializer[any]](fileArray *FileArray, item T, 
 	serializedItem := buffer.Bytes()
 
 	slice := fileArray.getSlice()
+
+	arraySize := serializationSize * index
+
+	if index == fileArray.Count() {
+		arraySize += serializationSize
+	}
+
+	if fileArray.hasSpace(arraySize) {
+		err := fileArray.adjustFileSize(2)
+		if err != nil {
+			return err
+		}
+	}
 
 	memoryLocation := index * serializationSize
 
 	copy(slice[memoryLocation:memoryLocation+serializationSize], serializedItem)
 
-	fileArray.incrementLength()
+	if index == fileArray.Count() {
+		fileArray.setCount(index + 1)
+	}
 
 	return nil
 }
 
-func GetItemFromIndex[T interfaces.Serializer[any]](fileArray *FileArray, index uint64) (interfaces.Serializer[any], error) {
+func GetItemFromIndex[T interfaces.Serializer[T]](fileArray *FileArray, index uint64) (interfaces.Serializer[T], error) {
+	var err error
 	var item T
 	var buffer bytes.Buffer
 
-	if index > fileArray.GetLength() {
+	if index > fileArray.Count() {
 		return nil, fmt.Errorf("index out of bounds")
 	}
 
@@ -70,17 +74,15 @@ func GetItemFromIndex[T interfaces.Serializer[any]](fileArray *FileArray, index 
 	copy(serializedItem, slice[memoryLocation:memoryLocation+serializedSize])
 	buffer.Write(serializedItem)
 
-	itemTemp, err := item.DeserializeFromBinaryStream(&buffer)
+	item, err = item.DeserializeFromBinaryStream(&buffer)
 	if err != nil {
 		return nil, err
 	}
 
-	item = itemTemp.(T)
-
 	return item, nil
 }
 
-func ShrinkwrapFile[T interfaces.Serializer[any]](fileArray *FileArray) error {
+func ShrinkwrapFile[T interfaces.Serializer[T]](fileArray *FileArray) error {
 	var sampleItem T
 
 	err := fileArray.shrinkFileSizeToDataSize(sampleItem.SerializedSize())
