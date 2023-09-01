@@ -1,6 +1,7 @@
 package fileArray
 
 import (
+	"io/ioutil"
 	"math"
 	"math/rand"
 	"os"
@@ -26,6 +27,78 @@ func TestNewFileArray(t *testing.T) {
 	}
 }
 
+func TestOpenAndInitializeFile(t *testing.T) {
+	// Create a temporary file for testing
+	tempFile, err := ioutil.TempFile("", "testfile")
+	if err != nil {
+		t.Fatalf("Failed to create temporary file: %v", err)
+	}
+	defer func(tempFile *os.File) {
+		err := tempFile.Close()
+		if err != nil {
+			t.Fatalf("")
+		}
+	}(tempFile)
+	defer os.Remove(tempFile.Name())
+
+	// Define the desired size for the file
+	size := int64(100)
+
+	// Call the function being tested
+	file, err := openAndInitializeFile(tempFile.Name(), size)
+
+	// Check for errors
+	if err != nil {
+		t.Fatalf("openAndInitializeFile returned an error: %v", err)
+	}
+
+	// Check if the file was created and its size matches the expected size
+	fileInfo, err := os.Stat(tempFile.Name())
+	if err != nil {
+		t.Fatalf("Failed to get file information: %v", err)
+	}
+
+	if fileInfo.Size() != size {
+		t.Fatalf("File size mismatch. Expected: %d, Actual: %d", size, fileInfo.Size())
+	}
+
+	// Clean up: close the file
+	file.Close()
+}
+
+func TestOpenMmap(t *testing.T) {
+	// Create a temporary file for testing
+	tempFile, err := os.CreateTemp("", "testfile")
+	if err != nil {
+		t.Fatalf("Failed to create temporary file: %v", err)
+	}
+	defer tempFile.Close()
+	defer os.Remove(tempFile.Name())
+
+	// Create a sample data to write into the file
+	data := []byte("Hello, World!")
+
+	// Write the data to the temporary file
+	_, err = tempFile.Write(data)
+	if err != nil {
+		t.Fatalf("Failed to write data to the file: %v", err)
+	}
+
+	// Open the file using mmap
+	memoryMap, err := openMmap(tempFile)
+
+	// Check for errors
+	if err != nil {
+		t.Fatalf("openMmap returned an error: %v", err)
+	}
+	defer memoryMap.Unmap() // Ensure we unmap the memory
+
+	// Check if the mapped data matches the original data
+	if string(memoryMap) != string(data) {
+		t.Fatalf("Mapped data does not match original data.")
+	}
+}
+
 func generateTestCases(numTestCases int) []struct {
 	value uint64
 } {
@@ -45,10 +118,11 @@ func generateTestCases(numTestCases int) []struct {
 func TestFileArray_Count(t *testing.T) {
 
 	tmpFile, err := os.CreateTemp("", "test-file")
+	defer os.Remove(tmpFile.Name()) // Clean up
+
 	if err != nil {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
-	defer os.Remove(tmpFile.Name()) // Clean up
 
 	fA, err := NewFileArray(tmpFile.Name())
 	if err != nil {
@@ -77,6 +151,8 @@ func TestFileArray_Count(t *testing.T) {
 
 func TestFileArray_Close(t *testing.T) {
 	tmpFile, err := os.CreateTemp("", "test-file")
+	defer os.Remove(tmpFile.Name()) // Clean up
+
 	if err != nil {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
@@ -86,5 +162,72 @@ func TestFileArray_Close(t *testing.T) {
 	err = fA.Close()
 	if err != nil {
 		t.Fatalf("Failed to close file array: %v", err)
+	}
+}
+
+func TestFileArrayCountEmptyMemoryMap(t *testing.T) {
+	tmpFile, err := os.CreateTemp("", "test-file")
+	defer os.Remove(tmpFile.Name()) // Clean up
+
+	if err != nil {
+		t.Fatalf("Failed to create temporary file: %v", err)
+	}
+
+	fileArray, err := NewFileArray(tmpFile.Name())
+
+	if err != nil {
+		t.Fatalf("Failed to create file array: %v", err)
+	}
+
+	count := fileArray.Count()
+	if count != 0 {
+		t.Fatalf("Count() returned %d, expected 0", count)
+	}
+}
+
+func TestFileArraySetCount(t *testing.T) {
+	tmpFile, err := os.CreateTemp("", "test-file")
+	defer os.Remove(tmpFile.Name()) // Clean up
+
+	if err != nil {
+		t.Fatalf("Failed to create temporary file: %v", err)
+	}
+
+	fileArray, err := NewFileArray(tmpFile.Name())
+
+	if err != nil {
+		t.Fatalf("Failed to create file array: %v", err)
+	}
+
+	// Test the setCount() method
+	expectedCount := uint64(42)
+	fileArray.setCount(expectedCount)
+	count := fileArray.Count()
+	if count != expectedCount {
+		t.Fatalf("setCount() did not set the count correctly. Got %d, expected %d", count, expectedCount)
+	}
+}
+
+func TestFileArrayIncrementCount(t *testing.T) {
+	tmpFile, err := os.CreateTemp("", "test-file")
+	defer os.Remove(tmpFile.Name()) // Clean up
+
+	if err != nil {
+		t.Fatalf("Failed to create temporary file: %v", err)
+	}
+
+	fileArray, err := NewFileArray(tmpFile.Name())
+
+	if err != nil {
+		t.Fatalf("Failed to create file array: %v", err)
+	}
+
+	// Test the incrementCount() method
+	expectedCount := uint64(42)
+	fileArray.setCount(expectedCount)
+	fileArray.incrementCount()
+	count := fileArray.Count()
+	if count != expectedCount+1 {
+		t.Fatalf("incrementCount() did not increment the count correctly. Got %d, expected %d", count, expectedCount+1)
 	}
 }

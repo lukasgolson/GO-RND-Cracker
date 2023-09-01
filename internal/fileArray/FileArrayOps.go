@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-func AppendItem[T serialization.Serializer](fileArray *FileArray, item T) error {
+func AppendItem[T serialization.Serializer](fileArray *FileArray, item *T) error {
 	err := SetItemAtIndex(fileArray, item, fileArray.Count())
 
 	if err != nil {
@@ -15,26 +15,25 @@ func AppendItem[T serialization.Serializer](fileArray *FileArray, item T) error 
 	return nil
 }
 
-func SetItemAtIndex[T serialization.Serializer](fileArray *FileArray, item T, index uint64) error {
-	serializationSize := item.SerializedSize()
+func SetItemAtIndex[T serialization.Serializer](fileArray *FileArray, item *T, index uint64) error {
+	serializationSize := (*item).SerializedSize()
 
 	if index > fileArray.Count() {
 		return fmt.Errorf("index out of bounds. Max index %d", fileArray.Count())
 	}
 
 	var buffer bytes.Buffer
-	err := item.SerializeToBinaryStream(&buffer)
+	err := (*item).SerializeToBinaryStream(&buffer)
 	if err != nil {
 		return err
 	}
 
 	serializedItem := buffer.Bytes()
 
-	slice := fileArray.getSlice()
-
 	arraySize := serializationSize * (index + 1)
 
 	if !fileArray.hasSpace(arraySize) {
+		println("Expanding memory map size")
 		err := fileArray.multiplyMemoryMapSize(2)
 		if err != nil {
 			return err
@@ -42,6 +41,8 @@ func SetItemAtIndex[T serialization.Serializer](fileArray *FileArray, item T, in
 	}
 
 	memoryLocation := serializationSize * index //<-- Updated calculation for memory location
+
+	slice := fileArray.getSlice()
 
 	copy(slice[memoryLocation:memoryLocation+serializationSize], serializedItem)
 

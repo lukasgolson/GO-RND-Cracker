@@ -6,8 +6,24 @@ import (
 	"testing"
 )
 
-func TestNumberSerializationAndDeserialization(t *testing.T) {
-	testNumber := Number(42)
+func TestNumber_SerializeToBinaryStream(t *testing.T) {
+	var buf bytes.Buffer
+	testNumber := NewNumber(42)
+
+	err := testNumber.SerializeToBinaryStream(&buf)
+	if err != nil {
+		t.Fatalf("Error serializing: %v", err)
+	}
+
+	expectedBytes := []byte{42, 0, 0, 0, 0, 0, 0, 0}
+
+	if !bytes.Equal(buf.Bytes(), expectedBytes) {
+		t.Fatalf("Serialized bytes don't match expected bytes. Got %v, expected %v", buf.Bytes(), expectedBytes)
+	}
+}
+
+func TestNumber_DeserializeFromBinaryStream(t *testing.T) {
+	testNumber := NewNumber(42)
 
 	var buf bytes.Buffer
 	err := testNumber.SerializeToBinaryStream(&buf)
@@ -15,7 +31,27 @@ func TestNumberSerializationAndDeserialization(t *testing.T) {
 		t.Fatalf("Error serializing: %v", err)
 	}
 
-	var deserializedNumber Num
+	var deserializedNumber Number
+	err = deserializedNumber.DeserializeFromBinaryStream(&buf)
+	if err != nil {
+		t.Fatalf("Error deserializing: %v", err)
+	}
+
+	if deserializedNumber != testNumber {
+		t.Fatalf("Deserialized number %d doesn't match original number %d", deserializedNumber, testNumber)
+	}
+}
+
+func TestNumberSerializationAndDeserialization(t *testing.T) {
+	testNumber := NewNumber(42)
+
+	var buf bytes.Buffer
+	err := testNumber.SerializeToBinaryStream(&buf)
+	if err != nil {
+		t.Fatalf("Error serializing: %v", err)
+	}
+
+	var deserializedNumber Number
 	err = deserializedNumber.DeserializeFromBinaryStream(&buf)
 	if err != nil {
 		t.Fatalf("Error deserializing: %v", err)
@@ -27,7 +63,7 @@ func TestNumberSerializationAndDeserialization(t *testing.T) {
 }
 
 func TestNumberSerializedSize(t *testing.T) {
-	testNumber := Number(42)
+	testNumber := NewNumber(42)
 	expectedSize := uint64(binary.Size(testNumber))
 
 	serializedSize := testNumber.SerializedSize()

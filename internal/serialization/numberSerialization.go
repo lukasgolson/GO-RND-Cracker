@@ -5,18 +5,18 @@ import (
 	"io"
 )
 
-type Num struct {
-	value int64
+type Number struct {
+	Value int64
 }
 
-// Number creates a new num instance with the provided value.
-func Number(val int64) Num {
-	return Num{value: val}
+// NewNumber creates a new num instance with the provided value.
+func NewNumber(val int64) Number {
+	return Number{Value: val}
 }
 
 // SerializeToBinaryStream serializes the num struct to a binary stream.
-func (number *Num) SerializeToBinaryStream(writer io.Writer) error {
-	err := binary.Write(writer, binary.LittleEndian, number.value) // <-- Use "number.value" instead of "number"
+func (number Number) SerializeToBinaryStream(writer io.Writer) error {
+	err := binary.Write(writer, binary.LittleEndian, number.Value)
 	if err != nil {
 		return err
 	}
@@ -24,8 +24,14 @@ func (number *Num) SerializeToBinaryStream(writer io.Writer) error {
 }
 
 // DeserializeFromBinaryStream deserializes the num struct from a binary stream.
-func (number *Num) DeserializeFromBinaryStream(reader io.Reader) error {
-	err := binary.Read(reader, binary.LittleEndian, &number.value) // <-- Use "&number.value" instead of "number"
+func (number Number) DeserializeFromBinaryStream(reader io.Reader) error {
+
+	var numba Number
+
+	err := binary.Read(reader, binary.LittleEndian, numba.Value)
+
+	number.Value = numba.Value
+
 	if err != nil {
 		return err
 	}
@@ -33,6 +39,6 @@ func (number *Num) DeserializeFromBinaryStream(reader io.Reader) error {
 }
 
 // SerializedSize returns the size of the serialized num struct.
-func (number *Num) SerializedSize() uint64 {
-	return uint64(binary.Size(number.value)) // <-- Use "number.value" instead of "number"
+func (number Number) SerializedSize() uint64 {
+	return uint64(binary.Size(number.Value))
 }
