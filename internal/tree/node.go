@@ -40,26 +40,30 @@ func (n *Node) SerializeToBinaryStream(writer io.Writer) error {
 	return nil
 }
 
-func (n *Node) DeserializeFromBinaryStream(reader io.Reader) (*Node, error) {
+func (n *Node) DeserializeFromBinaryStream(reader io.Reader) error {
 	var ID uint32
 	err := binary.Read(reader, binary.LittleEndian, &ID)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	var word [FixedWordSize]byte
 	err = binary.Read(reader, binary.LittleEndian, &word)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	var seed int32
 	err = binary.Read(reader, binary.LittleEndian, &seed)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return NewNode(ID, word, seed), nil
+	n.ID = ID
+	n.Word = word
+	n.Seed = seed
+
+	return nil
 }
 
 func (n *Node) SerializedSize() uint64 {

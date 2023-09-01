@@ -38,26 +38,30 @@ func (e *Edge) SerializeToBinaryStream(writer io.Writer) error {
 	return nil
 }
 
-func (e *Edge) DeserializeFromBinaryStream(reader io.Reader) (*Edge, error) {
+func (e *Edge) DeserializeFromBinaryStream(reader io.Reader) error {
 	var parentIndex uint32
 	err := binary.Read(reader, binary.LittleEndian, &parentIndex)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	var childIndex uint32
 	err = binary.Read(reader, binary.LittleEndian, &childIndex)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	var distance uint16
 	err = binary.Read(reader, binary.LittleEndian, &distance)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return NewEdge(parentIndex, childIndex, distance), nil
+	e.ParentIndex = parentIndex
+	e.ChildIndex = childIndex
+	e.Distance = distance
+
+	return nil
 }
 
 func (e *Edge) SerializedSize() uint64 {

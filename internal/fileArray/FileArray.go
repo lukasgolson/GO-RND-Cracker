@@ -115,7 +115,7 @@ func (fileArray *FileArray) increaseMemoryMapSize(newSize int64) error {
 	return nil
 }
 
-func (fileArray *FileArray) adjustFileSize(multiplier float64) error {
+func (fileArray *FileArray) multiplyFileSize(multiplier float64) error {
 	if multiplier <= 1.0 {
 		return fmt.Errorf("multiplier should be greater than 1.0")
 	}
@@ -153,7 +153,7 @@ func (fileArray *FileArray) shrinkFileSizeToDataSize(itemSize uint64) error {
 }
 
 func (fileArray *FileArray) hasSpace(dataSize uint64) bool {
-	return uint64(len(fileArray.memoryMap)) <= (dataSize)+8
+	return uint64(len(fileArray.memoryMap)) >= (dataSize + 8)
 }
 
 func (fileArray *FileArray) Close() error {

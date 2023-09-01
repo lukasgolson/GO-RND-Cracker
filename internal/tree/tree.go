@@ -22,11 +22,8 @@ func NewTree(filename string) (*Tree, error) {
 
 	var err error
 
-	nodes, err := fileArray.NewFileArray(nodesFilename)
-	edges, err := fileArray.NewFileArray(edgesFilename)
-
-	bkTree.Nodes = nodes
-	bkTree.Edges = edges
+	bkTree.Nodes, err = fileArray.NewFileArray(nodesFilename)
+	bkTree.Edges, err = fileArray.NewFileArray(edgesFilename)
 
 	if err != nil {
 		return nil, err
