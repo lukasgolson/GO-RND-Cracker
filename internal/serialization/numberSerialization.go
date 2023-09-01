@@ -24,18 +24,15 @@ func (number Number) SerializeToBinaryStream(writer io.Writer) error {
 }
 
 // DeserializeFromBinaryStream deserializes the num struct from a binary stream.
-func (number Number) DeserializeFromBinaryStream(reader io.Reader) error {
+func (number Number) DeserializeFromBinaryStream(reader io.Reader) (Number, error) {
 
-	var numba Number
-
-	err := binary.Read(reader, binary.LittleEndian, numba.Value)
-
-	number.Value = numba.Value
+	err := binary.Read(reader, binary.LittleEndian, &number.Value)
 
 	if err != nil {
-		return err
+		return number, err
 	}
-	return nil
+	return number, nil
+
 }
 
 // SerializedSize returns the size of the serialized num struct.

@@ -2,8 +2,8 @@ package serialization
 
 import "io"
 
-type Serializer interface {
+type Serializer[T any] interface {
 	SerializeToBinaryStream(writer io.Writer) error
-	DeserializeFromBinaryStream(reader io.Reader) error
+	DeserializeFromBinaryStream(reader io.Reader) (T[T], error)
 	SerializedSize() uint64
 }
