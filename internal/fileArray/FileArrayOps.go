@@ -8,6 +8,7 @@ import (
 
 func AppendItem[T serialization.Serializer](fileArray *FileArray, item T) error {
 	err := SetItemAtIndex(fileArray, item, fileArray.Count())
+
 	if err != nil {
 		return err
 	}
@@ -34,7 +35,7 @@ func SetItemAtIndex[T serialization.Serializer](fileArray *FileArray, item T, in
 	arraySize := serializationSize * (index + 1)
 
 	if !fileArray.hasSpace(arraySize) {
-		err := fileArray.multiplyFileSize(2)
+		err := fileArray.multiplyMemoryMapSize(2)
 		if err != nil {
 			return err
 		}

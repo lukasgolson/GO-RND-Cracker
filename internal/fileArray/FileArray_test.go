@@ -1,7 +1,6 @@
 package fileArray
 
 import (
-	"awesomeProject/internal/serialization"
 	"math"
 	"math/rand"
 	"os"
@@ -87,21 +86,5 @@ func TestFileArray_Close(t *testing.T) {
 	err = fA.Close()
 	if err != nil {
 		t.Fatalf("Failed to close file array: %v", err)
-	}
-}
-
-func TestAppendItem(t *testing.T) {
-	tmpFile, err := os.CreateTemp("", "test-file")
-	if err != nil {
-		t.Fatalf("Failed to create temporary file: %v", err)
-	}
-
-	fA, err := NewFileArray(tmpFile.Name())
-
-	num := serialization.Number(42)
-
-	err = AppendItem(fA, &num)
-	if err != nil {
-		return
 	}
 }

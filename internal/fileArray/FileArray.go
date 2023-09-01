@@ -87,21 +87,17 @@ func (fileArray *FileArray) getSlice() []byte {
 	return fileArray.memoryMap[8:]
 }
 
-func (fileArray *FileArray) increaseMemoryMapSize(newSize int64) error {
+func (fileArray *FileArray) expandMemoryMapSize(expansionSize int64) error {
 	currentSize, err := fileArray.backingFile.Seek(0, io.SeekEnd)
 	if err != nil {
 		return err
-	}
-
-	if newSize <= currentSize {
-		return nil // No need to truncate, the new size is not smaller
 	}
 
 	if err := fileArray.memoryMap.Unmap(); err != nil {
 		return err
 	}
 
-	if err := fileArray.backingFile.Truncate(newSize); err != nil {
+	if err := fileArray.backingFile.Truncate(currentSize + expansionSize); err != nil {
 		return err
 	}
 
@@ -115,7 +111,7 @@ func (fileArray *FileArray) increaseMemoryMapSize(newSize int64) error {
 	return nil
 }
 
-func (fileArray *FileArray) multiplyFileSize(multiplier float64) error {
+func (fileArray *FileArray) multiplyMemoryMapSize(multiplier float64) error {
 	if multiplier <= 1.0 {
 		return fmt.Errorf("multiplier should be greater than 1.0")
 	}
@@ -125,9 +121,9 @@ func (fileArray *FileArray) multiplyFileSize(multiplier float64) error {
 		return err
 	}
 
-	newSize := int64(float64(currentSize) * multiplier)
+	newSize := int64(float64(currentSize)*multiplier) - currentSize
 
-	if err := fileArray.increaseMemoryMapSize(newSize); err != nil {
+	if err := fileArray.expandMemoryMapSize(newSize); err != nil {
 		return err
 	}
 
@@ -153,7 +149,7 @@ func (fileArray *FileArray) shrinkFileSizeToDataSize(itemSize uint64) error {
 }
 
 func (fileArray *FileArray) hasSpace(dataSize uint64) bool {
-	return uint64(len(fileArray.memoryMap)) >= (dataSize + 8)
+	return uint64(len(fileArray.getSlice())) > (dataSize)
 }
 
 func (fileArray *FileArray) Close() error {
