@@ -41,7 +41,7 @@ func SetItemAtIndex[T serialization.Serializer[T]](fileArray *FileArray, item T,
 
 	memoryLocation := serializationSize * index //<-- Updated calculation for memory location
 
-	slice := fileArray.getSlice()
+	slice := fileArray.getDataSlice()
 
 	copy(slice[memoryLocation:memoryLocation+serializationSize], serializedItem)
 
@@ -66,7 +66,7 @@ func GetItemFromIndex[T serialization.Serializer[T]](fileArray *FileArray, index
 
 	memoryLocation := index * serializedSize
 
-	slice := fileArray.getSlice()
+	slice := fileArray.getDataSlice()
 
 	serializedItem := make([]byte, serializedSize)
 	copy(serializedItem, slice[memoryLocation:memoryLocation+serializedSize])

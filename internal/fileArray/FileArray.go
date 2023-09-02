@@ -13,10 +13,13 @@ type FileArray struct {
 	backingFile *os.File
 }
 
+const headerLength = 24
+const signature = "LGOFA"
+
 func NewFileArray(filename string) (*FileArray, error) {
 	fileSlice := &FileArray{}
 
-	file, err := openAndInitializeFile(filename, 8)
+	file, err := openAndInitializeFile(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +35,7 @@ func NewFileArray(filename string) (*FileArray, error) {
 	return fileSlice, nil
 }
 
-func openAndInitializeFile(filename string, size int64) (*os.File, error) {
+func openAndInitializeFile(filename string) (*os.File, error) {
 	file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		return nil, err
@@ -44,7 +47,7 @@ func openAndInitializeFile(filename string, size int64) (*os.File, error) {
 	}
 
 	if fileSize == 0 {
-		_, err := file.Write(make([]byte, size))
+		_, err := file.Write(generateHeader())
 		if err != nil {
 			return nil, err
 		}
@@ -63,19 +66,14 @@ func openMmap(file *os.File) (mmap.MMap, error) {
 }
 
 func (fileArray *FileArray) Count() uint64 {
-	bytes := fileArray.memoryMap
-
-	if len(bytes) < 8 {
-		return 0
-	}
-	counterSlice := bytes[:8]
+	counterSlice := fileArray.getCounterSlice()
 	count := binary.BigEndian.Uint64(counterSlice)
 	return count
 }
 
 func (fileArray *FileArray) setCount(value uint64) {
 
-	counterSlice := fileArray.memoryMap[:8]
+	counterSlice := fileArray.getHeaderSlice()
 	binary.BigEndian.PutUint64(counterSlice, value)
 }
 
@@ -83,8 +81,24 @@ func (fileArray *FileArray) incrementCount() {
 	fileArray.setCount(fileArray.Count() + 1)
 }
 
-func (fileArray *FileArray) getSlice() []byte {
-	return fileArray.memoryMap[8:]
+func (fileArray *FileArray) getDataSlice() []byte {
+	return fileArray.memoryMap[headerLength:]
+}
+
+func (fileArray *FileArray) getHeaderSlice() []byte {
+	return fileArray.memoryMap[:headerLength]
+}
+
+func (fileArray *FileArray) getCounterSlice() []byte {
+	return fileArray.memoryMap[headerLength-8:]
+}
+
+func generateHeader() []byte {
+	header := make([]byte, headerLength)
+
+	copy(header[0:5], signature[0:5])
+
+	return header
 }
 
 func (fileArray *FileArray) expandMemoryMapSize(expansionSize int64) error {
@@ -154,7 +168,7 @@ func (fileArray *FileArray) shrinkFileSizeToDataSize(itemSize uint64) error {
 }
 
 func (fileArray *FileArray) hasSpace(dataSize uint64) bool {
-	return uint64(len(fileArray.getSlice())) > (dataSize)
+	return uint64(len(fileArray.getDataSlice())) > (dataSize)
 }
 
 func (fileArray *FileArray) Close() error {
