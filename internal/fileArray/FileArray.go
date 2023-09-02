@@ -134,6 +134,11 @@ func (fileArray *FileArray) shrinkFileSizeToDataSize(itemSize uint64) error {
 
 	dataSize := int64(itemSize*fileArray.Count()) + 8
 
+	err := (*fileArray).memoryMap.Unmap()
+	if err != nil {
+		return err
+	}
+
 	if err := (*fileArray).backingFile.Truncate(dataSize); err != nil {
 		return err
 	}

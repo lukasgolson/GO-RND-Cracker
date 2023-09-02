@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-func AppendItem[T serialization.Serializer](fileArray *FileArray, item *T) error {
+func AppendItem[T serialization.Serializer[T]](fileArray *FileArray, item T) error {
 	err := SetItemAtIndex(fileArray, item, fileArray.Count())
 
 	if err != nil {
@@ -15,15 +15,15 @@ func AppendItem[T serialization.Serializer](fileArray *FileArray, item *T) error
 	return nil
 }
 
-func SetItemAtIndex[T serialization.Serializer](fileArray *FileArray, item *T, index uint64) error {
-	serializationSize := (*item).SerializedSize()
+func SetItemAtIndex[T serialization.Serializer[T]](fileArray *FileArray, item T, index uint64) error {
+	serializationSize := (item).SerializedSize()
 
 	if index > fileArray.Count() {
 		return fmt.Errorf("index out of bounds. Max index %d", fileArray.Count())
 	}
 
 	var buffer bytes.Buffer
-	err := (*item).SerializeToBinaryStream(&buffer)
+	err := (item).SerializeToBinaryStream(&buffer)
 	if err != nil {
 		return err
 	}
@@ -33,7 +33,6 @@ func SetItemAtIndex[T serialization.Serializer](fileArray *FileArray, item *T, i
 	arraySize := serializationSize * (index + 1)
 
 	if !fileArray.hasSpace(arraySize) {
-		println("Expanding memory map size")
 		err := fileArray.multiplyMemoryMapSize(2)
 		if err != nil {
 			return err
@@ -53,14 +52,15 @@ func SetItemAtIndex[T serialization.Serializer](fileArray *FileArray, item *T, i
 	return nil
 }
 
-func GetItemFromIndex[T serialization.Serializer](fileArray *FileArray, index uint64) (serialization.Serializer, error) {
+func GetItemFromIndex[T serialization.Serializer[T]](fileArray *FileArray, index uint64) (T, error) {
 	var err error
 	var item T
-	var buffer bytes.Buffer
 
-	if index > fileArray.Count() {
-		return nil, fmt.Errorf("index out of bounds")
+	if index >= fileArray.Count() {
+		return item, fmt.Errorf("index out of bounds")
 	}
+
+	var buffer bytes.Buffer
 
 	serializedSize := item.SerializedSize()
 
@@ -72,15 +72,15 @@ func GetItemFromIndex[T serialization.Serializer](fileArray *FileArray, index ui
 	copy(serializedItem, slice[memoryLocation:memoryLocation+serializedSize])
 	buffer.Write(serializedItem)
 
-	err = item.DeserializeFromBinaryStream(&buffer)
+	item, err = item.DeserializeFromBinaryStream(&buffer)
 	if err != nil {
-		return nil, err
+		return item, err
 	}
 
 	return item, nil
 }
 
-func ShrinkwrapFile[T serialization.Serializer](fileArray *FileArray) error {
+func ShrinkWrapFileArray[T serialization.Serializer[T]](fileArray *FileArray) error {
 	var sampleItem T
 
 	err := fileArray.shrinkFileSizeToDataSize(sampleItem.SerializedSize())

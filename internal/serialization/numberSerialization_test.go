@@ -32,7 +32,7 @@ func TestNumber_DeserializeFromBinaryStream(t *testing.T) {
 	}
 
 	deserializedNumber := NewNumber(28)
-	err = deserializedNumber.DeserializeFromBinaryStream(&buf)
+	deserializedNumber, err = deserializedNumber.DeserializeFromBinaryStream(&buf)
 	if err != nil {
 		t.Fatalf("Error deserializing: %v", err)
 	}
@@ -52,7 +52,7 @@ func TestNumberSerializationAndDeserialization(t *testing.T) {
 	}
 
 	var deserializedNumber Number
-	err = deserializedNumber.DeserializeFromBinaryStream(&buf)
+	deserializedNumber, err = deserializedNumber.DeserializeFromBinaryStream(&buf)
 	if err != nil {
 		t.Fatalf("Error deserializing: %v", err)
 	}
