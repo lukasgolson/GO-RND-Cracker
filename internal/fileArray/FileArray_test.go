@@ -45,7 +45,7 @@ func TestOpenAndInitializeFile(t *testing.T) {
 	size := int64(100)
 
 	// Call the function being tested
-	file, err := openAndInitializeFile(tempFile.Name(), size)
+	file, err := openAndInitializeFile(tempFile.Name())
 
 	// Check for errors
 	if err != nil {

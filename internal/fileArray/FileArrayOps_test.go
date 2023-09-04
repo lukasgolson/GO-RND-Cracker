@@ -8,12 +8,7 @@ import (
 
 func TestAppendItemSpace(t *testing.T) {
 	tmpFile, err := os.CreateTemp("", "test-file")
-	defer func(name string) {
-		err := os.Remove(name)
-		if err != nil {
-			t.Fatalf("Failed to remove temporary file: %v", err)
-		}
-	}(tmpFile.Name())
+
 	if err != nil {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
@@ -36,12 +31,7 @@ func TestAppendItemSpace(t *testing.T) {
 
 func TestAppendItemNoSpace(t *testing.T) {
 	tmpFile, err := os.CreateTemp("", "test-file")
-	defer func(name string) {
-		err := os.Remove(name)
-		if err != nil {
-			t.Fatalf("Failed to remove temporary file: %v", err)
-		}
-	}(tmpFile.Name())
+
 	if err != nil {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
@@ -63,12 +53,7 @@ func TestAppendItemNoSpace(t *testing.T) {
 
 func TestSetItemAtIndex(t *testing.T) {
 	tmpFile, err := os.CreateTemp("", "test-file")
-	defer func(name string) {
-		err := os.Remove(name)
-		if err != nil {
-			t.Fatalf("Failed to remove temporary file: %v", err)
-		}
-	}(tmpFile.Name())
+
 	if err != nil {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
@@ -85,12 +70,7 @@ func TestSetItemAtIndex(t *testing.T) {
 
 func TestSetItemAtIndexWithIndexOutOfBounds(t *testing.T) {
 	tmpFile, err := os.CreateTemp("", "test-file")
-	defer func(name string) {
-		err := os.Remove(name)
-		if err != nil {
-			t.Fatalf("Failed to remove temporary file: %v", err)
-		}
-	}(tmpFile.Name())
+
 	if err != nil {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
@@ -107,12 +87,7 @@ func TestSetItemAtIndexWithIndexOutOfBounds(t *testing.T) {
 
 func TestGetItemFromIndex(t *testing.T) {
 	tmpFile, err := os.CreateTemp("", "test-file")
-	defer func(name string) {
-		err := os.Remove(name)
-		if err != nil {
-			t.Fatalf("Failed to remove temporary file: %v", err)
-		}
-	}(tmpFile.Name())
+
 	if err != nil {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
@@ -141,12 +116,6 @@ func TestGetItemFromIndex(t *testing.T) {
 
 func TestAppendItemAndCount(t *testing.T) {
 	tmpFile, err := os.CreateTemp("", "test-file")
-	defer func(name string) {
-		err := os.Remove(name)
-		if err != nil {
-			t.Fatalf("Failed to remove temporary file: %v", err)
-		}
-	}(tmpFile.Name())
 
 	if err != nil {
 		t.Fatalf("Failed to create temporary file: %v", err)
@@ -185,12 +154,7 @@ func TestAppendItemAndCount(t *testing.T) {
 
 func TestGetItemFromIndexWithIndexOutOfBounds(t *testing.T) {
 	tmpFile, err := os.CreateTemp("", "test-file")
-	defer func(name string) {
-		err := os.Remove(name)
-		if err != nil {
-			t.Fatalf("Failed to remove temporary file: %v", err)
-		}
-	}(tmpFile.Name())
+
 	if err != nil {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
@@ -215,12 +179,7 @@ func TestGetItemFromIndexWithIndexOutOfBounds(t *testing.T) {
 
 func TestGetItemFromIndexWithIndexEqualToCount(t *testing.T) {
 	tmpFile, err := os.CreateTemp("", "test-file")
-	defer func(name string) {
-		err := os.Remove(name)
-		if err != nil {
-			t.Fatalf("Failed to remove temporary file: %v", err)
-		}
-	}(tmpFile.Name())
+
 	if err != nil {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
@@ -245,12 +204,6 @@ func TestGetItemFromIndexWithIndexEqualToCount(t *testing.T) {
 
 func TestAppendAndGetItem(t *testing.T) {
 	tmpFile, err := os.CreateTemp("", "test-file")
-	defer func(name string) {
-		err := os.Remove(name)
-		if err != nil {
-			t.Fatalf("Failed to remove temporary file: %v", err)
-		}
-	}(tmpFile.Name())
 
 	if err != nil {
 		t.Fatalf("Failed to create temporary file: %v", err)
@@ -288,12 +241,6 @@ func TestAppendAndGetItem(t *testing.T) {
 
 func TestShrinkwrapFile(t *testing.T) {
 	tmpFile, err := os.CreateTemp("", "test-file")
-	defer func(name string) {
-		err := os.Remove(name)
-		if err != nil {
-			t.Fatalf("Failed to remove temporary file: %v", err)
-		}
-	}(tmpFile.Name())
 
 	if err != nil {
 		t.Fatalf("Failed to create temporary file: %v", err)
