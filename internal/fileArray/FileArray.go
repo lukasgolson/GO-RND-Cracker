@@ -31,6 +31,11 @@ func NewFileArray[T serialization.Serializer[T]](serializer T, filename string) 
 	fileArray.backingFile = file
 	fileArray.memoryMap = memoryMap
 
+	header, err := readHeader(fileArray.getHeaderSlice())
+	err = verifyHeader(serializer, header)
+
+	fileArray.header = header
+
 	if err != nil {
 		return nil, err
 	}
