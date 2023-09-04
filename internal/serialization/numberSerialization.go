@@ -40,6 +40,6 @@ func (number Number) StrideLength() uint64 {
 	return uint64(binary.Size(number.Value))
 }
 
-func (number Number) IDByte() []byte {
-	return []byte{'N'}
+func (number Number) IDByte() byte {
+	return 'N'
 }

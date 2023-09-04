@@ -68,6 +68,6 @@ func (e Edge) StrideLength() uint64 {
 	return uint64(binary.Size(e.ParentIndex) + binary.Size(e.ChildIndex) + binary.Size(e.Distance))
 }
 
-func (e Edge) IDByte() []byte {
-	return []byte{'E'}
+func (e Edge) IDByte() byte {
+	return 'E'
 }

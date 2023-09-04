@@ -70,6 +70,6 @@ func (n Node) StrideLength() uint64 {
 	return uint64(binary.Size(n.ID) + len(n.Word) + binary.Size(n.Seed))
 }
 
-func (n Node) IDByte() []byte {
-	return []byte{'N'}
+func (n Node) IDByte() byte {
+	return 'N'
 }

@@ -10,16 +10,13 @@ import (
 )
 
 type FileArray struct {
+	header      Header
 	memoryMap   mmap.MMap
 	backingFile *os.File
 }
 
-const headerLength = 28
-const signature = "LGO-FA"
-const version uint8 = 1
-
 func NewFileArray[T serialization.Serializer[T]](serializer T, filename string) (*FileArray, error) {
-	fileSlice := &FileArray{}
+	fileArray := &FileArray{}
 
 	file, err := openAndInitializeFile(serializer, filename)
 	if err != nil {
@@ -31,10 +28,14 @@ func NewFileArray[T serialization.Serializer[T]](serializer T, filename string) 
 		return nil, err
 	}
 
-	fileSlice.backingFile = file
-	fileSlice.memoryMap = memoryMap
+	fileArray.backingFile = file
+	fileArray.memoryMap = memoryMap
 
-	return fileSlice, nil
+	if err != nil {
+		return nil, err
+	}
+
+	return fileArray, nil
 }
 
 func openAndInitializeFile[T serialization.Serializer[T]](serializer T, filename string) (*os.File, error) {
@@ -92,34 +93,7 @@ func (fileArray *FileArray) getHeaderSlice() []byte {
 }
 
 func (fileArray *FileArray) getCounterSlice() []byte {
-	return fileArray.memoryMap[headerLength-8:]
-}
-
-func generateHeader[T serialization.Serializer[T]](serializer T) []byte {
-	header := make([]byte, headerLength)
-
-	// Layout:
-	// 6 bytes signature,
-	// 1 byte version, 1 byte serializer ID
-	// 4 bytes data struct hash, 8 bytes stride length,
-	// 8 bytes array count
-
-	// Copy the signature (6 bytes)
-	copy(header[0:6], signature[0:6])
-
-	// Set the version (1 byte)
-	header[6] = version
-
-	copy(header[7:8], serializer.IDByte())
-
-	// Set the 4-byte data type and data size (Little Endian)
-	binary.LittleEndian.PutUint32(header[8:12], serialization.GenerateStructStructureHash(serializer))
-	binary.LittleEndian.PutUint64(header[12:20], serializer.StrideLength())
-
-	// Set the 8-byte array count (Little Endian)
-	binary.LittleEndian.PutUint64(header[20:28], 0)
-
-	return header
+	return fileArray.memoryMap[headerLength-8 : headerLength]
 }
 
 func (fileArray *FileArray) expandMemoryMapSize(expansionSize int64) error {
