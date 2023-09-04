@@ -3,6 +3,7 @@ package tree
 import (
 	"awesomeProject/internal/algorithms"
 	"awesomeProject/internal/fileArray"
+	"math"
 )
 
 func (tree *Tree) addToBKTree(rootIndex uint32, word [NodeWordSize]byte, seed int32) (*Node, error) {
@@ -85,4 +86,79 @@ func (tree *Tree) addToBKTree(rootIndex uint32, word [NodeWordSize]byte, seed in
 		// Step 6: Set the current node to the found child node and continue the loop.
 		currentNodeIndex = childNodeIndex
 	}
+}
+
+func (tree *Tree) findClosestElement(rootIndex uint32, w [NodeWordSize]byte, dMax uint32) (*Node, uint32) {
+	if tree.Nodes.Count() == 0 {
+		return nil, math.MaxUint32
+	}
+
+	S := make([]uint32, 0)   // Set of nodes to process
+	S = append(S, rootIndex) // Insert the root node into S
+	wBest := Node{}          // Best matching element
+	dBest := dMax            // Best matching distance, initialized to dMax
+
+	for len(S) != 0 {
+		u := S[len(S)-1] // Pop the last node from S
+		S = S[:len(S)-1]
+
+		n, err := fileArray.GetItemFromIndex[Node](tree.Nodes, uint64(u))
+
+		if err != nil {
+			return nil, math.MaxUint32
+		}
+
+		dU := algorithms.MeyersDifferenceAlgorithm(n.Word[:], w[:])
+
+		if dU < dBest {
+
+			wBest, err = fileArray.GetItemFromIndex[Node](tree.Nodes, uint64(u))
+			dBest = dU
+		}
+
+		for _, edge := range tree.getEgressArcs(u) {
+			v := edge.ChildIndex
+			dUV := uint32(abs(int32(edge.Distance) - int32(dU)))
+
+			if dUV < dBest {
+				S = append(S, v) // Insert v into S
+			}
+		}
+	}
+
+	if dBest == dMax {
+		return nil, math.MaxUint32
+	}
+
+	return &wBest, dBest
+}
+
+func (tree *Tree) getEgressArcs(u uint32) []Edge {
+	// Create a slice to store egress arcs
+	egressArcs := make([]Edge, 0)
+
+	// Iterate through the edges in the tree
+	for i := uint64(0); i < tree.Edges.Count(); i++ {
+		edge, err := fileArray.GetItemFromIndex[Edge](tree.Edges, i)
+
+		if err != nil {
+			continue
+		}
+
+		// Check if the edge's parent index matches the given node index
+		if edge.ParentIndex == u {
+			// Append the edge to the egressArcs slice
+			egressArcs = append(egressArcs, edge)
+		}
+	}
+
+	// Return the egress arcs for the specified node
+	return egressArcs
+}
+
+func abs(x int32) int32 {
+	if x < 0 {
+		return -x
+	}
+	return x
 }

@@ -8,10 +8,10 @@ import (
 type Edge struct {
 	ParentIndex uint32
 	ChildIndex  uint32
-	Distance    uint16
+	Distance    uint32
 }
 
-func NewEdge(parentIndex uint32, childIndex uint32, distance uint16) *Edge {
+func NewEdge(parentIndex uint32, childIndex uint32, distance uint32) *Edge {
 	return &Edge{
 		ParentIndex: parentIndex,
 		ChildIndex:  childIndex,
@@ -51,7 +51,7 @@ func (e Edge) DeserializeFromBinaryStream(reader io.Reader) (Edge, error) {
 		return e, err
 	}
 
-	var distance uint16
+	var distance uint32
 	err = binary.Read(reader, binary.LittleEndian, &distance)
 	if err != nil {
 		return e, err
