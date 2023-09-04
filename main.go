@@ -1,9 +1,6 @@
 package main
 
 import (
-	"awesomeProject/bktree"
-	bk_tree "awesomeProject/file-format"
-	"capnproto.org/go/capnp/v3"
 	"encoding/binary"
 	"fmt"
 	"log"
@@ -55,44 +52,23 @@ func generateRandomSequence(seed int64, randSource *rand.Rand) []byte {
 func processPartition(lo, hi int64, randSource *rand.Rand) error {
 	batchSize := 1000
 
-	var sequence = generateRandomSequence(lo, randSource)
-	var tree = bktree.NewBkTree(sequence, int32(lo))
+	//var tree, _ = tree.NewTree("main")
 
 	var counter = 0
 
 	for i := lo + 1; i < hi; i++ {
-		seed := i
+		//seed := i
 		counter++
 
 		// Generate the sequence based on the random source
-		var sequence = generateRandomSequence(seed, randSource)
+		//	var sequence = generateRandomSequence(seed, randSource)
 
 		if counter <= batchSize {
-			tree.Add(sequence, int32(seed))
-		} else {
-			tree = bktree.NewBkTree(sequence, int32(seed))
+			//tree.Add(sequence, int32(seed))
 		}
 	}
 
 	return nil
-}
-
-func serializeTree(rootNode bktree.Node) {
-
-	arena := capnp.SingleSegment(nil)
-
-	_, seg, err := capnp.NewMessage(arena)
-	if err != nil {
-		panic(err)
-	}
-
-	treeRoot, err := bk_tree.NewRootNode(seg)
-	if err != nil {
-		panic(err)
-	}
-
-	treeRoot.SetSeed(rootNode.Seed)
-
 }
 
 func main() {

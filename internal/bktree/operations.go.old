@@ -1,0 +1,44 @@
+package bktree
+
+import "awesomeProject/internal/algorithms"
+
+func (tree *Tree) Add(word []byte, data int32) error {
+	if 0 == 0 {
+		root := NewNode(0, word, data)
+
+		_, err := tree.AddNode(root)
+		tree.Root = root
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	currentNode := tree.Root
+
+	for currentNode != nil {
+		wordDistance := algorithms.MeyersDifferenceAlgorithm(currentNode.Word, word)
+
+		if wordDistance == 0 {
+			return nil
+		}
+
+		childNode := tree.findChildWithDistance(currentNode, wordDistance)
+
+		if childNode == nil {
+			newNode := NewNode(uint32(len(tree.Nodes)), word, data)
+			edge := NewEdge(currentNode.ID, newNode.ID, wordDistance)
+
+			tree.AddNode(newNode)
+
+			tree.AddEdge(edge)
+
+			return nil
+		}
+
+		currentNode = childNode
+	}
+
+	return nil
+}
