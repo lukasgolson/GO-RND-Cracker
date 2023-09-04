@@ -1,4 +1,4 @@
-package serialization
+package number
 
 import (
 	"encoding/binary"
@@ -35,7 +35,6 @@ func (number Number) DeserializeFromBinaryStream(reader io.Reader) (Number, erro
 
 }
 
-// SerializedSize returns the size of the serialized num struct.
 func (number Number) StrideLength() uint64 {
 	return uint64(binary.Size(number.Value))
 }

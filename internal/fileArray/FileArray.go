@@ -99,21 +99,21 @@ func openMmap(file *os.File) (mmap.MMap, error) {
 	return memoryMap, nil
 }
 
-// Count returns the current count of items stored in the FileArray instance.
+// Count returns the current count of elements stored in the FileArray instance.
 func (fileArray *FileArray) Count() uint64 {
 	counterSlice := fileArray.getCounterSlice()
 	count := binary.BigEndian.Uint64(counterSlice)
 	return count
 }
 
-// setCount sets the count of items in the FileArray to the specified value.
+// setCount sets the count of elements in the FileArray to the specified value.
 func (fileArray *FileArray) setCount(value uint64) {
 
 	counterSlice := fileArray.getCounterSlice()
 	binary.BigEndian.PutUint64(counterSlice, value)
 }
 
-// incrementCount increments the count of items in the FileArray by one.
+// incrementCount increments the count of elements in the FileArray by one.
 func (fileArray *FileArray) incrementCount() {
 	fileArray.setCount(fileArray.Count() + 1)
 }
@@ -123,6 +123,7 @@ func (fileArray *FileArray) getDataSlice() []byte {
 	return fileArray.memoryMap[headerLength:]
 }
 
+// getHeaderSlice returns a slice containing the data stored in the FileArray header.
 func (fileArray *FileArray) getHeaderSlice() []byte {
 	return fileArray.memoryMap[:headerLength]
 }

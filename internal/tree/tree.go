@@ -6,8 +6,6 @@ import (
 )
 
 type Tree struct {
-	Root *Node
-
 	Nodes *fileArray.FileArray
 	Edges *fileArray.FileArray
 

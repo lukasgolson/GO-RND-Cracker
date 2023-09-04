@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-// AppendItem appends an item of type T to a FileArray.
+// Append appends an item of type T to a FileArray.
 // It serializes the item and adds it to the end of the array.
 //
 // Parameters:
@@ -15,7 +15,7 @@ import (
 //
 // Returns:
 //   - An error if the operation fails, nil otherwise.
-func AppendItem[T serialization.Serializer[T]](fileArray *FileArray, item T) error {
+func Append[T serialization.Serializer[T]](fileArray *FileArray, item T) error {
 	err := SetItemAtIndex(fileArray, item, fileArray.Count())
 
 	if err != nil {

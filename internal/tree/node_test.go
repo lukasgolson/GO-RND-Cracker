@@ -8,7 +8,7 @@ import (
 func TestNodeSerializeDeserialize(t *testing.T) {
 	node := Node{
 		ID:   42,
-		Word: [FixedWordSize]byte{1, 2, 3, 4},
+		Word: [NodeWordSize]byte{1, 2, 3, 4},
 		Seed: 12,
 	}
 
@@ -41,7 +41,7 @@ func TestNodeSerializeDeserialize(t *testing.T) {
 func TestNodeSerializedSize(t *testing.T) {
 	node := Node{
 		ID:   42,
-		Word: [FixedWordSize]byte{1, 2, 3, 4},
+		Word: [NodeWordSize]byte{1, 2, 3, 4},
 		Seed: 12,
 	}
 
@@ -59,14 +59,14 @@ func TestNodeSerializedSize(t *testing.T) {
 }
 
 func TestNewNode(t *testing.T) {
-	node := NewNode(42, [FixedWordSize]byte{1, 2, 3, 4}, 12)
+	node := NewNode(42, [NodeWordSize]byte{1, 2, 3, 4}, 12)
 
 	if node.ID != 42 {
 		t.Fatalf("ID did not match. Got %d, expected %d", node.ID, 42)
 	}
 
-	if node.Word != [FixedWordSize]byte{1, 2, 3, 4} {
-		t.Fatalf("Word did not match. Got %d, expected %d", node.Word, [FixedWordSize]byte{1, 2, 3, 4})
+	if node.Word != [NodeWordSize]byte{1, 2, 3, 4} {
+		t.Fatalf("Word did not match. Got %d, expected %d", node.Word, [NodeWordSize]byte{1, 2, 3, 4})
 	}
 
 	if node.Seed != 12 {
