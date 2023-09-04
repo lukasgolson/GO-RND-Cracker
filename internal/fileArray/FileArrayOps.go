@@ -6,6 +6,15 @@ import (
 	"fmt"
 )
 
+// AppendItem appends an item of type T to a FileArray.
+// It serializes the item and adds it to the end of the array.
+//
+// Parameters:
+//   - fileArray: The target FileArray to which the item is appended.
+//   - item: The item of type T to be appended.
+//
+// Returns:
+//   - An error if the operation fails, nil otherwise.
 func AppendItem[T serialization.Serializer[T]](fileArray *FileArray, item T) error {
 	err := SetItemAtIndex(fileArray, item, fileArray.Count())
 
@@ -15,6 +24,16 @@ func AppendItem[T serialization.Serializer[T]](fileArray *FileArray, item T) err
 	return nil
 }
 
+// SetItemAtIndex sets an item of type T at a specific index within a FileArray.
+// It serializes the item and stores it at the given index.
+//
+// Parameters:
+//   - fileArray: The target FileArray in which the item is set.
+//   - item: The item of type T to be set.
+//   - index: The index where the item will be placed.
+//
+// Returns:
+//   - An error if the operation fails, nil otherwise.
 func SetItemAtIndex[T serialization.Serializer[T]](fileArray *FileArray, item T, index uint64) error {
 	serializationSize := (item).StrideLength()
 
@@ -52,6 +71,16 @@ func SetItemAtIndex[T serialization.Serializer[T]](fileArray *FileArray, item T,
 	return nil
 }
 
+// GetItemFromIndex retrieves an item of type T from a FileArray at the specified index.
+// It deserializes the item and returns it along with any potential errors.
+//
+// Parameters:
+//   - fileArray: The source FileArray from which the item is retrieved.
+//   - index: The index of the item to retrieve.
+//
+// Returns:
+//   - The item of type T at the specified index.
+//   - An error if the operation fails, nil otherwise.
 func GetItemFromIndex[T serialization.Serializer[T]](fileArray *FileArray, index uint64) (T, error) {
 	var err error
 	var item T
@@ -80,6 +109,14 @@ func GetItemFromIndex[T serialization.Serializer[T]](fileArray *FileArray, index
 	return item, nil
 }
 
+// ShrinkWrapFileArray reduces the size of a FileArray to match the actual data size.
+// It is used to optimize disk usage by resizing the array to fit its contents.
+//
+// Parameters:
+//   - fileArray: The FileArray to be shrink-wrapped.
+//
+// Returns:
+//   - An error if the operation fails, nil otherwise.
 func ShrinkWrapFileArray[T serialization.Serializer[T]](fileArray *FileArray) error {
 	var sampleItem T
 
