@@ -66,7 +66,7 @@ func TestNumberSerializedSize(t *testing.T) {
 	testNumber := NewNumber(42)
 	expectedSize := uint64(binary.Size(testNumber))
 
-	serializedSize := testNumber.SerializedSize()
+	serializedSize := testNumber.StrideLength()
 
 	if serializedSize != expectedSize {
 		t.Fatalf("Serialized size mismatch: got %d, expected %d", serializedSize, expectedSize)

@@ -1,6 +1,7 @@
 package fileArray
 
 import (
+	"awesomeProject/internal/serialization"
 	"encoding/binary"
 	"fmt"
 	"github.com/edsrzf/mmap-go"
@@ -13,14 +14,14 @@ type FileArray struct {
 	backingFile *os.File
 }
 
-const headerLength = 24
-const signature = "LOFA"
+const headerLength = 28
+const signature = "LGO-FA"
 const version uint8 = 1
 
-func NewFileArray(filename string) (*FileArray, error) {
+func NewFileArray[T serialization.Serializer[T]](serializer T, filename string) (*FileArray, error) {
 	fileSlice := &FileArray{}
 
-	file, err := openAndInitializeFile(filename)
+	file, err := openAndInitializeFile(serializer, filename)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +37,7 @@ func NewFileArray(filename string) (*FileArray, error) {
 	return fileSlice, nil
 }
 
-func openAndInitializeFile(filename string) (*os.File, error) {
+func openAndInitializeFile[T serialization.Serializer[T]](serializer T, filename string) (*os.File, error) {
 	file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		return nil, err
@@ -48,7 +49,7 @@ func openAndInitializeFile(filename string) (*os.File, error) {
 	}
 
 	if fileSize == 0 {
-		_, err := file.Write(generateHeader())
+		_, err := file.Write(generateHeader(serializer))
 		if err != nil {
 			return nil, err
 		}
@@ -94,18 +95,29 @@ func (fileArray *FileArray) getCounterSlice() []byte {
 	return fileArray.memoryMap[headerLength-8:]
 }
 
-func generateHeader() []byte {
+func generateHeader[T serialization.Serializer[T]](serializer T) []byte {
 	header := make([]byte, headerLength)
 
-	// Layout: 4 bytes signature, 1 byte version, 2 byte reserve,
-	// 4 bytes data type, 4 bytes data size,
+	// Layout:
+	// 6 bytes signature,
+	// 1 byte version, 1 byte serializer ID
+	// 4 bytes data struct hash, 8 bytes stride length,
 	// 8 bytes array count
 
-	copy(header[0:4], signature[0:4])
-	header[4] = version
-	binary.LittleEndian.PutUint16(header[5:7], 0)   // For 2-byte reserve
-	binary.LittleEndian.PutUint32(header[7:11], 0)  // For 4-byte data type and data size
-	binary.LittleEndian.PutUint64(header[11:19], 0) // For 8-byte array count
+	// Copy the signature (6 bytes)
+	copy(header[0:6], signature[0:6])
+
+	// Set the version (1 byte)
+	header[6] = version
+
+	copy(header[7:8], serializer.IDByte())
+
+	// Set the 4-byte data type and data size (Little Endian)
+	binary.LittleEndian.PutUint32(header[8:12], serialization.GenerateStructStructureHash(serializer))
+	binary.LittleEndian.PutUint64(header[12:20], serializer.StrideLength())
+
+	// Set the 8-byte array count (Little Endian)
+	binary.LittleEndian.PutUint64(header[20:28], 0)
 
 	return header
 }

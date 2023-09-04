@@ -46,7 +46,7 @@ func TestEdgeSerializedSize(t *testing.T) {
 		Distance:    12,
 	}
 
-	size := edge.SerializedSize()
+	size := edge.StrideLength()
 
 	var buffer bytes.Buffer
 	err := edge.SerializeToBinaryStream(&buffer)
@@ -55,7 +55,7 @@ func TestEdgeSerializedSize(t *testing.T) {
 	}
 
 	if size != uint64(len(buffer.Bytes())) {
-		t.Fatalf("SerializedSize() did not return the correct size. Got %d, expected %d", size, len(buffer.Bytes()))
+		t.Fatalf("StrideLength() did not return the correct size. Got %d, expected %d", size, len(buffer.Bytes()))
 	}
 }
 

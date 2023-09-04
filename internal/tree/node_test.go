@@ -45,7 +45,7 @@ func TestNodeSerializedSize(t *testing.T) {
 		Seed: 12,
 	}
 
-	size := node.SerializedSize()
+	size := node.StrideLength()
 
 	var buffer bytes.Buffer
 	err := node.SerializeToBinaryStream(&buffer)
@@ -54,7 +54,7 @@ func TestNodeSerializedSize(t *testing.T) {
 	}
 
 	if size != uint64(len(buffer.Bytes())) {
-		t.Fatalf("SerializedSize() did not return the correct size. Got %d, expected %d", size, len(buffer.Bytes()))
+		t.Fatalf("StrideLength() did not return the correct size. Got %d, expected %d", size, len(buffer.Bytes()))
 	}
 }
 

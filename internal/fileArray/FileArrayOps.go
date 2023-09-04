@@ -16,7 +16,7 @@ func AppendItem[T serialization.Serializer[T]](fileArray *FileArray, item T) err
 }
 
 func SetItemAtIndex[T serialization.Serializer[T]](fileArray *FileArray, item T, index uint64) error {
-	serializationSize := (item).SerializedSize()
+	serializationSize := (item).StrideLength()
 
 	if index > fileArray.Count() {
 		return fmt.Errorf("index out of bounds. Max index %d", fileArray.Count())
@@ -62,7 +62,7 @@ func GetItemFromIndex[T serialization.Serializer[T]](fileArray *FileArray, index
 
 	var buffer bytes.Buffer
 
-	serializedSize := item.SerializedSize()
+	serializedSize := item.StrideLength()
 
 	memoryLocation := index * serializedSize
 
@@ -83,7 +83,7 @@ func GetItemFromIndex[T serialization.Serializer[T]](fileArray *FileArray, index
 func ShrinkWrapFileArray[T serialization.Serializer[T]](fileArray *FileArray) error {
 	var sampleItem T
 
-	err := fileArray.shrinkFileSizeToDataSize(sampleItem.SerializedSize())
+	err := fileArray.shrinkFileSizeToDataSize(sampleItem.StrideLength())
 	if err != nil {
 		return err
 	}

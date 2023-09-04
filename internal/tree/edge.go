@@ -19,7 +19,7 @@ func NewEdge(parentIndex uint32, childIndex uint32, distance uint16) *Edge {
 	}
 }
 
-func (e *Edge) SerializeToBinaryStream(writer io.Writer) error {
+func (e Edge) SerializeToBinaryStream(writer io.Writer) error {
 	err := binary.Write(writer, binary.LittleEndian, e.ParentIndex)
 	if err != nil {
 		return err
@@ -38,32 +38,36 @@ func (e *Edge) SerializeToBinaryStream(writer io.Writer) error {
 	return nil
 }
 
-func (e *Edge) DeserializeFromBinaryStream(reader io.Reader) (Edge, error) {
+func (e Edge) DeserializeFromBinaryStream(reader io.Reader) (Edge, error) {
 	var parentIndex uint32
 	err := binary.Read(reader, binary.LittleEndian, &parentIndex)
 	if err != nil {
-		return *e, err
+		return e, err
 	}
 
 	var childIndex uint32
 	err = binary.Read(reader, binary.LittleEndian, &childIndex)
 	if err != nil {
-		return *e, err
+		return e, err
 	}
 
 	var distance uint16
 	err = binary.Read(reader, binary.LittleEndian, &distance)
 	if err != nil {
-		return *e, err
+		return e, err
 	}
 
 	e.ParentIndex = parentIndex
 	e.ChildIndex = childIndex
 	e.Distance = distance
 
-	return *e, nil
+	return e, nil
 }
 
-func (e *Edge) SerializedSize() uint64 {
+func (e Edge) StrideLength() uint64 {
 	return uint64(binary.Size(e.ParentIndex) + binary.Size(e.ChildIndex) + binary.Size(e.Distance))
+}
+
+func (e Edge) IDByte() []byte {
+	return []byte{'E'}
 }
