@@ -14,7 +14,8 @@ type FileArray struct {
 }
 
 const headerLength = 24
-const signature = "LGOFA"
+const signature = "LOFA"
+const version uint8 = 1
 
 func NewFileArray(filename string) (*FileArray, error) {
 	fileSlice := &FileArray{}
@@ -73,7 +74,7 @@ func (fileArray *FileArray) Count() uint64 {
 
 func (fileArray *FileArray) setCount(value uint64) {
 
-	counterSlice := fileArray.getHeaderSlice()
+	counterSlice := fileArray.getCounterSlice()
 	binary.BigEndian.PutUint64(counterSlice, value)
 }
 
@@ -96,7 +97,15 @@ func (fileArray *FileArray) getCounterSlice() []byte {
 func generateHeader() []byte {
 	header := make([]byte, headerLength)
 
-	copy(header[0:5], signature[0:5])
+	// Layout: 4 bytes signature, 1 byte version, 2 byte reserve,
+	// 4 bytes data type, 4 bytes data size,
+	// 8 bytes array count
+
+	copy(header[0:4], signature[0:4])
+	header[4] = version
+	binary.LittleEndian.PutUint16(header[5:7], 0)   // For 2-byte reserve
+	binary.LittleEndian.PutUint32(header[7:11], 0)  // For 4-byte data type and data size
+	binary.LittleEndian.PutUint64(header[11:19], 0) // For 8-byte array count
 
 	return header
 }
@@ -146,7 +155,7 @@ func (fileArray *FileArray) multiplyMemoryMapSize(multiplier float64) error {
 
 func (fileArray *FileArray) shrinkFileSizeToDataSize(itemSize uint64) error {
 
-	dataSize := int64(itemSize*fileArray.Count()) + 8
+	dataSize := int64(itemSize*fileArray.Count()) + headerLength
 
 	err := (*fileArray).memoryMap.Unmap()
 	if err != nil {

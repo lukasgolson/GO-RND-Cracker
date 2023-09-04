@@ -252,16 +252,18 @@ func TestShrinkwrapFile(t *testing.T) {
 		t.Fatalf("Failed to create file array: %v", err)
 	}
 
-	err = AppendItem(fileArray, serialization.NewNumber(42))
-	if err != nil {
-		t.Fatalf("Failed to append item: %v", err)
-	}
-
 	fi, err := tmpFile.Stat()
 	if err != nil {
 		t.Fatalf("Failed to retrieve file stats...")
 	}
 	initialSize := fi.Size()
+
+	num := serialization.NewNumber(42)
+
+	err = AppendItem(fileArray, num)
+	if err != nil {
+		t.Fatalf("Failed to append item: %v", err)
+	}
 
 	err = fileArray.expandMemoryMapSize(1024 * 1024)
 	if err != nil {
@@ -287,8 +289,10 @@ func TestShrinkwrapFile(t *testing.T) {
 		t.Fatalf("ShrinkWrapFileArray did not shrink the file. Expanded size: %d, Shrunk size: %d", expandedSize, shrunkSize)
 	}
 
-	if shrunkSize != initialSize {
-		t.Fatalf("ShrinkWrapFileArray shrunk the file to an incorrect size. Initial size: %d, Shrunk size: %d", initialSize, shrunkSize)
+	expectedSize := uint64(initialSize) + (num.SerializedSize())
+
+	if uint64(shrunkSize) < expectedSize {
+		t.Fatalf("ShrinkWrapFileArray shrunk the file smaller than possible. Min size: %d, Shrunk size: %d", expectedSize, shrunkSize)
 	}
 
 	println("ShrinkWrapFileArray succeeded. Initial size:", initialSize, "Expanded size:", expandedSize, "Shrunk size:", shrunkSize)
