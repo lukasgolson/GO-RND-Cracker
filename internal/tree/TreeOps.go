@@ -51,15 +51,15 @@ func (tree *Tree) AddToBKTree(rootIndex uint32, word [NodeWordSize]byte, seed in
 	}
 }
 
-func (tree *Tree) FindClosestElement(rootIndex uint32, w [NodeWordSize]byte, dMax uint32) (*Node, uint32) {
+func (tree *Tree) FindClosestElement(rootIndex uint32, word [NodeWordSize]byte, maxDistance uint32) (*Node, uint32) {
 	if tree.Nodes.Count() == 0 {
 		return nil, math.MaxUint32
 	}
 
-	S := make([]uint32, 0)   // Set of nodes to process
-	S = append(S, rootIndex) // Insert the root node into S
-	wBest := Node{}          // Best matching element
-	dBest := dMax            // Best matching distance, initialized to dMax
+	S := make([]uint32, 0)      // Set of nodes to process
+	S = append(S, rootIndex)    // Insert the root node into S
+	bestWord := Node{}          // Best matching element
+	bestDistance := maxDistance // Best matching distance, initialized to maxDistance
 
 	for len(S) != 0 {
 		u := S[len(S)-1] // Pop the last node from S
@@ -71,27 +71,27 @@ func (tree *Tree) FindClosestElement(rootIndex uint32, w [NodeWordSize]byte, dMa
 			return nil, math.MaxUint32
 		}
 
-		dU := algorithms.MeyersDifferenceAlgorithm(n.Word[:], w[:])
+		dU := algorithms.MeyersDifferenceAlgorithm(n.Word[:], word[:])
 
-		if dU < dBest {
+		if dU < bestDistance {
 
-			wBest, err = tree.getNodeByIndex(u)
-			dBest = dU
+			bestWord, err = tree.getNodeByIndex(u)
+			bestDistance = dU
 		}
 
 		for _, edge := range tree.getEgressArcs(u) {
 			v := edge.ChildIndex
 			dUV := uint32(util.Abs(int32(edge.Distance) - int32(dU)))
 
-			if dUV < dBest {
+			if dUV < bestDistance {
 				S = append(S, v) // Insert v into S
 			}
 		}
 	}
 
-	if dBest == dMax {
+	if bestDistance == maxDistance {
 		return nil, math.MaxUint32
 	}
 
-	return &wBest, dBest
+	return &bestWord, bestDistance
 }

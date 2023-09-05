@@ -1,14 +1,15 @@
 package tree
 
 import (
+	"awesomeProject/internal/util"
 	"os"
 	"testing"
 )
 
 func TestAddToBKTree_EmptyTree(t *testing.T) {
 	// Create a test instance of the BKTree
-	tree, err := NewTree("Test") // You need to implement a function to create a new BKTree instance
-
+	tmpFile, _ := os.CreateTemp("", "test-file")
+	tree, err := NewTree(tmpFile.Name())
 	if err != nil {
 		t.Fatalf("Error creating tree: %v", err)
 	}
@@ -25,7 +26,9 @@ func TestAddToBKTree_EmptyTree(t *testing.T) {
 }
 
 func TestAddToBKTree_AddingDuplicate(t *testing.T) {
-	tree, err := NewTree("Test") // You need to implement a function to create a new BKTree instance
+	tmpFile, _ := os.CreateTemp("", "test-file")
+	tree, err := NewTree(tmpFile.Name())
+
 	if err != nil {
 		t.Fatalf("Error creating tree: %v", err)
 	}
@@ -47,35 +50,17 @@ func TestAddToBKTree_AddingDuplicate(t *testing.T) {
 }
 
 func TestAddToBKTree_AddingToNonEmptyTree(t *testing.T) {
-	tree, err := NewTree("Test") // Implement a function to create a new BKTree instance
+
+	tmpFile, _ := os.CreateTemp("", "test-file")
+	tree, err := NewTree(tmpFile.Name())
+
 	if err != nil {
 		t.Fatalf("Error creating tree: %v", err)
 	}
 
 	defer cleanup(tree)
 
-	wordStrings := []string{
-		"cat",
-		"car",
-		"cart",
-		"carts",
-		"dog",
-		"dogs",
-		"hello",
-		"world",
-		"fox",
-		"bird",
-		"fish",
-		"pen",
-		"pencil",
-		"book",
-		"books",
-		"apple",
-		"orange",
-		"banana",
-		"grape",
-		"mango",
-	}
+	wordStrings := util.GetWordList()
 
 	for i, wordString := range wordStrings {
 		word := make([]byte, NodeWordSize)
@@ -87,6 +72,46 @@ func TestAddToBKTree_AddingToNonEmptyTree(t *testing.T) {
 		if err != nil {
 			t.Errorf("Expected no error when adding to a non-empty tree, but got: %v", err)
 		}
+	}
+}
+
+func TestFuzzyMatch(t *testing.T) {
+	tree, err := NewTree("Test")
+	if err != nil {
+		t.Fatalf("Error creating tree: %v", err)
+	}
+
+	defer cleanup(tree)
+
+	for i, wordString := range util.GetWordList() {
+		word := make([]byte, NodeWordSize)
+
+		copy(word[:], wordString)
+
+		seed := i
+		err = tree.AddToBKTree(0, [32]byte(word), int32(seed))
+		if err != nil {
+			t.Errorf("Expected no error when adding to a non-empty tree, but got: %v", err)
+		}
+
+	}
+
+	word := make([]byte, NodeWordSize)
+	copy(word[:], "cat")
+
+	foundNode, distance := tree.FindClosestElement(0, [32]byte(word), 1)
+
+	if distance != 0 {
+		t.Errorf("Expected distance to be 0, but got: %v.", distance)
+	}
+
+	word = make([]byte, NodeWordSize)
+	copy(word[:], "catty")
+
+	_, distance = tree.FindClosestElement(0, [32]byte(word), 10)
+
+	if distance != 1 {
+		t.Errorf("Expected distance to be 1, but got: %v. Tested word %v, found word %v", distance, "catty", string(foundNode.Word[:]))
 	}
 }
 
