@@ -15,13 +15,15 @@ import (
 //
 // Returns:
 //   - An error if the operation fails, nil otherwise.
-func Append[T serialization.Serializer[T]](fileArray *FileArray, item T) error {
-	err := SetItemAtIndex(fileArray, item, fileArray.Count())
+func Append[T serialization.Serializer[T]](fileArray *FileArray, item T) (uint64, error) {
+
+	id := fileArray.Count()
+	err := SetItemAtIndex[T](fileArray, item, id)
 
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+	return id, nil
 }
 
 // SetItemAtIndex sets an item of type T at a specific index within a FileArray.
@@ -51,20 +53,26 @@ func SetItemAtIndex[T serialization.Serializer[T]](fileArray *FileArray, item T,
 
 	arraySize := serializationSize * (index + 1)
 
-	if !fileArray.hasSpace(arraySize) {
+	stallCounter := 0
+	for !fileArray.hasSpace(arraySize) {
+		stallCounter++
 		err := fileArray.multiplyMemoryMapSize(2)
 		if err != nil {
 			return err
 		}
+
+		if stallCounter > 32 {
+			return fmt.Errorf("stall counter exceeded")
+		}
 	}
 
-	memoryLocation := serializationSize * index //<-- Updated calculation for memory location
+	memoryLocation := serializationSize * index
 
 	slice := fileArray.getDataSlice()
 
 	copy(slice[memoryLocation:memoryLocation+serializationSize], serializedItem)
 
-	if index >= fileArray.Count() { //<-- Changed the condition to handle index equal to or greater than Count()
+	if index >= fileArray.Count() {
 		fileArray.setCount(index + 1)
 	}
 
