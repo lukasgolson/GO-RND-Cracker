@@ -248,3 +248,8 @@ func (fileArray *FileArray) Close() error {
 
 	return err
 }
+
+// GetFileName returns the name of the backing file.
+func (fileArray *FileArray) GetFileName() string {
+	return fileArray.backingFile.Name()
+}
