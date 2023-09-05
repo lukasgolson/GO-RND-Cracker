@@ -2,93 +2,56 @@ package tree
 
 import (
 	"awesomeProject/internal/algorithms"
-	"awesomeProject/internal/fileArray"
+	"awesomeProject/internal/util"
 	"math"
 )
 
-func (tree *Tree) addToBKTree(rootIndex uint32, word [NodeWordSize]byte, seed int32) (*Node, error) {
+func (tree *Tree) AddToBKTree(rootIndex uint32, word [NodeWordSize]byte, seed int32) error {
+	// Step 1: Check if the tree is empty, if so, create a root node.
+	if tree.isEmpty() {
 
-	// Step 1: Check if the current node is empty (no word). If so, add the word to the node and return.
-	if tree.Nodes.Count() == 0 {
-		// Create a root node if the tree is empty.
-		rootNode := Node{
-			ID:   0,
-			Word: word,
-			Seed: seed,
+		if _, err := tree.addNode(word, seed); err != nil {
+			return err
 		}
 
-		// Add the root node to the tree.
-		err := fileArray.SetItemAtIndex(tree.Nodes, rootNode, 0)
-		if err != nil {
-			return nil, err
-		}
-
-		return &rootNode, nil
+		return nil
 	}
 
 	currentNodeIndex := rootIndex
 
 	for {
-		// Step 2: Calculate the edit distance between the current node's word and the word to be added.
-		currentNode, err := fileArray.GetItemFromIndex[Node](tree.Nodes, uint64(currentNodeIndex))
+		currentNode, err := tree.getNodeByIndex(currentNodeIndex)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		editDistance := algorithms.MeyersDifferenceAlgorithm(currentNode.Word[:], word[:])
 
-		// Step 3: If the edit distance is 0, return the current node.
 		if editDistance == 0 {
-			return &currentNode, nil
+			return nil
 		}
 
-		// Step 4: Find the child node (if it exists) with the same edit distance.
-		var childNodeIndex uint32
-		found := false
+		childNodeIndex, found := tree.findChildNodeWithDistance(currentNodeIndex, editDistance)
 
-		for edgeIndex := uint64(0); edgeIndex < tree.Edges.Count(); edgeIndex++ {
-			edge, err := fileArray.GetItemFromIndex[Edge](tree.Edges, edgeIndex)
-			if err != nil {
-				return nil, err
-			}
-			if edge.ParentIndex == currentNodeIndex {
-				if edge.Distance == editDistance {
-					childNodeIndex = edge.ChildIndex
-					found = true
-					break
-				}
-			}
-		}
-
-		// Step 5: If the child node is not found, create a new node and add the corresponding edge.
 		if !found {
-			newNode := Node{
-				ID:   uint32(tree.Nodes.Count()), // Assign a new ID to the node.
-				Word: word,
-				Seed: seed,
-			}
 
-			// Add the new node to the tree.
-			err := fileArray.SetItemAtIndex(tree.Nodes, newNode, uint64(newNode.ID))
+			id, err := tree.addNode(word, seed)
+
 			if err != nil {
-				return nil, err
+				return err
 			}
 
-			// Create the edge between the current node and the new node and store it in the edge file array.
-			newEdge := Edge{ParentIndex: currentNodeIndex, ChildIndex: newNode.ID, Distance: editDistance}
-			err = fileArray.Append(tree.Edges, newEdge)
-			if err != nil {
-				return nil, err
+			if _, err := tree.AddEdge(currentNodeIndex, id, editDistance); err != nil {
+				return err
 			}
 
-			return &newNode, nil
+			return nil
 		}
 
-		// Step 6: Set the current node to the found child node and continue the loop.
 		currentNodeIndex = childNodeIndex
 	}
 }
 
-func (tree *Tree) findClosestElement(rootIndex uint32, w [NodeWordSize]byte, dMax uint32) (*Node, uint32) {
+func (tree *Tree) FindClosestElement(rootIndex uint32, w [NodeWordSize]byte, dMax uint32) (*Node, uint32) {
 	if tree.Nodes.Count() == 0 {
 		return nil, math.MaxUint32
 	}
@@ -102,7 +65,7 @@ func (tree *Tree) findClosestElement(rootIndex uint32, w [NodeWordSize]byte, dMa
 		u := S[len(S)-1] // Pop the last node from S
 		S = S[:len(S)-1]
 
-		n, err := fileArray.GetItemFromIndex[Node](tree.Nodes, uint64(u))
+		n, err := tree.getNodeByIndex(u)
 
 		if err != nil {
 			return nil, math.MaxUint32
@@ -112,13 +75,13 @@ func (tree *Tree) findClosestElement(rootIndex uint32, w [NodeWordSize]byte, dMa
 
 		if dU < dBest {
 
-			wBest, err = fileArray.GetItemFromIndex[Node](tree.Nodes, uint64(u))
+			wBest, err = tree.getNodeByIndex(u)
 			dBest = dU
 		}
 
 		for _, edge := range tree.getEgressArcs(u) {
 			v := edge.ChildIndex
-			dUV := uint32(abs(int32(edge.Distance) - int32(dU)))
+			dUV := uint32(util.Abs(int32(edge.Distance) - int32(dU)))
 
 			if dUV < dBest {
 				S = append(S, v) // Insert v into S
@@ -131,34 +94,4 @@ func (tree *Tree) findClosestElement(rootIndex uint32, w [NodeWordSize]byte, dMa
 	}
 
 	return &wBest, dBest
-}
-
-func (tree *Tree) getEgressArcs(u uint32) []Edge {
-	// Create a slice to store egress arcs
-	egressArcs := make([]Edge, 0)
-
-	// Iterate through the edges in the tree
-	for i := uint64(0); i < tree.Edges.Count(); i++ {
-		edge, err := fileArray.GetItemFromIndex[Edge](tree.Edges, i)
-
-		if err != nil {
-			continue
-		}
-
-		// Check if the edge's parent index matches the given node index
-		if edge.ParentIndex == u {
-			// Append the edge to the egressArcs slice
-			egressArcs = append(egressArcs, edge)
-		}
-	}
-
-	// Return the egress arcs for the specified node
-	return egressArcs
-}
-
-func abs(x int32) int32 {
-	if x < 0 {
-		return -x
-	}
-	return x
 }

@@ -56,6 +56,8 @@ func TestNodeSerializedSize(t *testing.T) {
 	if size != uint64(len(buffer.Bytes())) {
 		t.Fatalf("StrideLength() did not return the correct size. Got %d, expected %d", size, len(buffer.Bytes()))
 	}
+
+	println("Node serialized size:", size)
 }
 
 func TestNewNode(t *testing.T) {

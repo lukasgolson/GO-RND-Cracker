@@ -22,7 +22,7 @@ func TestAppendItemSpace(t *testing.T) {
 		t.Fatalf("Failed to expand memory map size: %v", err)
 	}
 
-	err = Append(fA, num)
+	_, err = Append(fA, num)
 	if err != nil {
 		t.Fatalf("Failed to append item when space is available: %v", err)
 	}
@@ -40,7 +40,7 @@ func TestAppendItemNoSpace(t *testing.T) {
 
 	num := number.NewNumber(42)
 
-	err = Append(fA, num)
+	_, err = Append(fA, num)
 
 	if r := recover(); r != nil {
 		t.Fatalf("Failed to append item when space is not available: %v", err)
@@ -130,7 +130,7 @@ func TestAppendItemAndCount(t *testing.T) {
 	//Repeatedly append items to the file array and check the count
 	for i := 0; i < 100; i++ {
 		num := number.NewNumber(int64(i))
-		err = Append(fileArray, num)
+		_, err = Append(fileArray, num)
 		if err != nil {
 			t.Fatalf("Failed to append item: %v", err)
 		}
@@ -220,7 +220,7 @@ func TestAppendAndGetItem(t *testing.T) {
 	//Repeatedly append items to the file array
 	for i := 0; i < count; i++ {
 		num := number.NewNumber(int64(i))
-		err = Append(fileArray, num)
+		_, err = Append(fileArray, num)
 		if err != nil {
 			t.Fatalf("Failed to append item: %v", err)
 		}
@@ -260,7 +260,7 @@ func TestShrinkwrapFile(t *testing.T) {
 
 	num := number.NewNumber(42)
 
-	err = Append(fileArray, num)
+	_, err = Append(fileArray, num)
 	if err != nil {
 		t.Fatalf("Failed to append item: %v", err)
 	}
