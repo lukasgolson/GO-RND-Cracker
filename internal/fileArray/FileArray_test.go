@@ -221,3 +221,43 @@ func TestFileArrayIncrementCount(t *testing.T) {
 		t.Fatalf("incrementCount() did not increment the count correctly. Got %d, expected %d", count, expectedCount+1)
 	}
 }
+
+func TestFileArray_FileRetrieve(t *testing.T) {
+	tmpFile, err := os.CreateTemp("", "test-file")
+	defer os.Remove(tmpFile.Name()) // Clean up
+
+	if err != nil {
+		t.Fatalf("Failed to create temporary file: %v", err)
+	}
+
+	fA, err := NewFileArray(number.Number{}, tmpFile.Name())
+
+	for i := 0; i <= 24; i++ {
+		_, err = Append(fA, number.NewNumber(int64(i)))
+	}
+
+	if err != nil {
+		return
+	}
+
+	err = fA.Close()
+	if err != nil {
+		t.Fatalf("Failed to close file array: %v", err)
+	}
+
+	fA2, err := NewFileArray(number.Number{}, tmpFile.Name())
+
+	if err != nil {
+		t.Fatalf("Failed to create file array: %v", err)
+	}
+
+	for i := 0; i <= 24; i++ {
+		num, err := GetItemFromIndex[number.Number](fA2, uint64(i))
+		if err != nil {
+			t.Fatalf("Failed to get item from index: %v", err)
+		}
+		if num.Value != int64(i) {
+			t.Fatalf("Expected %d, got %d", i, num.Value)
+		}
+	}
+}

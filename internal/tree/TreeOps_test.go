@@ -106,12 +106,12 @@ func TestFuzzyMatch(t *testing.T) {
 	}
 
 	word = make([]byte, NodeWordSize)
-	copy(word[:], "catty")
+	copy(word[:], "cats")
 
 	_, distance = tree.FindClosestElement(0, [32]byte(word), 10)
 
 	if distance != 1 {
-		t.Errorf("Expected distance to be 1, but got: %v. Tested word %v, found word %v", distance, "catty", string(foundNode.Word[:]))
+		t.Errorf("Expected distance to be 1, but got: %v. Tested word %v, found word %v", distance, string(word[:]), string(foundNode.Word[:]))
 	}
 }
 
