@@ -38,9 +38,9 @@ func (tree *Tree) isEmpty() bool {
 	return tree.Nodes.Count() == 0
 }
 
-func (tree *Tree) addNode(data [32]byte, seed int32) (uint32, error) {
+func (tree *Tree) addNode(data [32]byte, seed int32) (fileArray.Offset, error) {
 
-	id := uint32(tree.Nodes.Count())
+	id := tree.Nodes.Count()
 
 	_, err := fileArray.Append[Node](tree.Nodes, *NewNode(id, data, seed))
 
@@ -51,17 +51,17 @@ func (tree *Tree) addNode(data [32]byte, seed int32) (uint32, error) {
 	return id, nil
 }
 
-func (tree *Tree) AddEdge(parentIndex, childIndex, distance uint32) (uint64, error) {
+func (tree *Tree) AddEdge(parentIndex, childIndex fileArray.Offset, distance uint32) (fileArray.Offset, error) {
 	newEdge := NewEdge(parentIndex, childIndex, distance)
 	id, err := fileArray.Append(tree.Edges, *newEdge)
 	return id, err
 }
 
-func (tree *Tree) getNodeByIndex(index uint32) (Node, error) {
-	return fileArray.GetItemFromIndex[Node](tree.Nodes, uint64(index))
+func (tree *Tree) getNodeByIndex(index fileArray.Offset) (Node, error) {
+	return fileArray.GetItemFromIndex[Node](tree.Nodes, index)
 }
 
-func (tree *Tree) getEdgeByIndex(index uint64) (Edge, error) {
+func (tree *Tree) getEdgeByIndex(index fileArray.Offset) (Edge, error) {
 	return fileArray.GetItemFromIndex[Edge](tree.Edges, index)
 }
 

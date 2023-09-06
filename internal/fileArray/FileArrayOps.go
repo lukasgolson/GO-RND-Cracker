@@ -15,15 +15,15 @@ import (
 //
 // Returns:
 //   - An error if the operation fails, nil otherwise.
-func Append[T serialization.Serializer[T]](fileArray *FileArray, item T) (uint64, error) {
+func Append[T serialization.Serializer[T]](fileArray *FileArray, item T) (Offset, error) {
 
 	id := fileArray.Count()
-	err := SetItemAtIndex[T](fileArray, item, id)
+	err := SetItemAtIndex[T](fileArray, item, Offset(id))
 
 	if err != nil {
 		return 0, err
 	}
-	return id, nil
+	return Offset(id), nil
 }
 
 // SetItemAtIndex sets an item of type T at a specific index within a FileArray.
@@ -36,8 +36,8 @@ func Append[T serialization.Serializer[T]](fileArray *FileArray, item T) (uint64
 //
 // Returns:
 //   - An error if the operation fails, nil otherwise.
-func SetItemAtIndex[T serialization.Serializer[T]](fileArray *FileArray, item T, index uint64) error {
-	serializationSize := (item).StrideLength()
+func SetItemAtIndex[T serialization.Serializer[T]](fileArray *FileArray, item T, index Offset) error {
+	serializationSize := Offset((item).StrideLength())
 
 	if index > fileArray.Count() {
 		return fmt.Errorf("index out of bounds. Max index %d", fileArray.Count())
@@ -54,7 +54,7 @@ func SetItemAtIndex[T serialization.Serializer[T]](fileArray *FileArray, item T,
 	arraySize := serializationSize * (index + 1)
 
 	stallCounter := 0
-	for !fileArray.hasSpace(arraySize) {
+	for !fileArray.hasSpace(uint64(arraySize)) {
 		stallCounter++
 		err := fileArray.multiplyMemoryMapSize(2)
 		if err != nil {
@@ -89,7 +89,7 @@ func SetItemAtIndex[T serialization.Serializer[T]](fileArray *FileArray, item T,
 // Returns:
 //   - The item of type T at the specified index.
 //   - An error if the operation fails, nil otherwise.
-func GetItemFromIndex[T serialization.Serializer[T]](fileArray *FileArray, index uint64) (T, error) {
+func GetItemFromIndex[T serialization.Serializer[T]](fileArray *FileArray, index Offset) (T, error) {
 	var err error
 	var item T
 
@@ -99,9 +99,9 @@ func GetItemFromIndex[T serialization.Serializer[T]](fileArray *FileArray, index
 
 	var buffer bytes.Buffer
 
-	serializedSize := item.StrideLength()
+	serializedSize := Offset(item.StrideLength())
 
-	memoryLocation := index * serializedSize
+	memoryLocation := Offset(index * serializedSize)
 
 	slice := fileArray.getDataSlice()
 
@@ -128,7 +128,7 @@ func GetItemFromIndex[T serialization.Serializer[T]](fileArray *FileArray, index
 func ShrinkWrapFileArray[T serialization.Serializer[T]](fileArray *FileArray) error {
 	var sampleItem T
 
-	err := fileArray.shrinkFileSizeToDataSize(sampleItem.StrideLength())
+	err := fileArray.shrinkFileSizeToDataSize(Length(sampleItem.StrideLength()))
 	if err != nil {
 		return err
 	}

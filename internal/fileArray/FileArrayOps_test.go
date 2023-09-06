@@ -136,11 +136,11 @@ func TestAppendItemAndCount(t *testing.T) {
 		}
 
 		count := fileArray.Count()
-		if count != uint64(i+1) {
+		if count != Length(i+1) {
 			t.Fatalf("Count() returned %d, expected %d", count, i+1)
 		}
 
-		item, err := GetItemFromIndex[number.Number](fileArray, uint64(i))
+		item, err := GetItemFromIndex[number.Number](fileArray, Offset(i))
 		if err != nil {
 			t.Fatalf("Failed to get item from index: %v", err)
 		}
@@ -228,7 +228,7 @@ func TestAppendAndGetItem(t *testing.T) {
 
 	//Repeatedly get items from the file array
 	for i := 0; i < count; i++ {
-		item, err := GetItemFromIndex[number.Number](fileArray, uint64(i))
+		item, err := GetItemFromIndex[number.Number](fileArray, Offset(i))
 		if err != nil {
 			t.Fatalf("Failed to get item from index: %v", err)
 		}

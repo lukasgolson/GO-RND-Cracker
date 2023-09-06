@@ -91,14 +91,14 @@ func TestOpenMmap(t *testing.T) {
 }
 
 func generateTestCases(numTestCases int) []struct {
-	value uint64
+	value Offset
 } {
 	testCases := make([]struct {
-		value uint64
+		value Offset
 	}, numTestCases)
 
 	for i := 0; i <= numTestCases-2; i++ {
-		testCases[i].value = uint64(rand.Intn((i * 10) + 1)) // Generate values algorithmically
+		testCases[i].value = Offset(rand.Intn((i * 10) + 1)) // Generate values algorithmically
 	}
 
 	testCases[numTestCases-1].value = math.MaxUint64 // Generate values algorithmically
@@ -190,7 +190,7 @@ func TestFileArraySetCount(t *testing.T) {
 	}
 
 	// Test the setCount() method
-	expectedCount := uint64(42)
+	expectedCount := Offset(42)
 	fileArray.setCount(expectedCount)
 	count := fileArray.Count()
 	if count != expectedCount {
@@ -213,7 +213,7 @@ func TestFileArrayIncrementCount(t *testing.T) {
 	}
 
 	// Test the incrementCount() method
-	expectedCount := uint64(42)
+	expectedCount := Offset(42)
 	fileArray.setCount(expectedCount)
 	fileArray.incrementCount()
 	count := fileArray.Count()
@@ -252,7 +252,7 @@ func TestFileArray_FileRetrieve(t *testing.T) {
 	}
 
 	for i := 0; i <= 24; i++ {
-		num, err := GetItemFromIndex[number.Number](fA2, uint64(i))
+		num, err := GetItemFromIndex[number.Number](fA2, Offset(i))
 		if err != nil {
 			t.Fatalf("Failed to get item from index: %v", err)
 		}

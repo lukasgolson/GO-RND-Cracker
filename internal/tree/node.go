@@ -1,6 +1,7 @@
 package tree
 
 import (
+	"awesomeProject/internal/fileArray"
 	"encoding/binary"
 	"io"
 )
@@ -8,12 +9,12 @@ import (
 const NodeWordSize = 32
 
 type Node struct {
-	ID   uint32
+	ID   fileArray.Offset
 	Word [NodeWordSize]byte
 	Seed int32
 }
 
-func NewNode(ID uint32, word [NodeWordSize]byte, seed int32) *Node {
+func NewNode(ID fileArray.Offset, word [NodeWordSize]byte, seed int32) *Node {
 	return &Node{
 		ID:   ID,
 		Word: word,
@@ -41,7 +42,7 @@ func (n Node) SerializeToBinaryStream(writer io.Writer) error {
 }
 
 func (n Node) DeserializeFromBinaryStream(reader io.Reader) (Node, error) {
-	var ID uint32
+	var ID fileArray.Offset
 	err := binary.Read(reader, binary.LittleEndian, &ID)
 	if err != nil {
 		return n, err

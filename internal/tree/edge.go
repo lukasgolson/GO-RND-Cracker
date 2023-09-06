@@ -1,17 +1,18 @@
 package tree
 
 import (
+	"awesomeProject/internal/fileArray"
 	"encoding/binary"
 	"io"
 )
 
 type Edge struct {
-	ParentIndex uint32
-	ChildIndex  uint32
+	ParentIndex fileArray.Offset
+	ChildIndex  fileArray.Offset
 	Distance    uint32
 }
 
-func NewEdge(parentIndex uint32, childIndex uint32, distance uint32) *Edge {
+func NewEdge(parentIndex fileArray.Offset, childIndex fileArray.Offset, distance uint32) *Edge {
 	return &Edge{
 		ParentIndex: parentIndex,
 		ChildIndex:  childIndex,
@@ -39,13 +40,13 @@ func (e Edge) SerializeToBinaryStream(writer io.Writer) error {
 }
 
 func (e Edge) DeserializeFromBinaryStream(reader io.Reader) (Edge, error) {
-	var parentIndex uint32
+	var parentIndex fileArray.Offset
 	err := binary.Read(reader, binary.LittleEndian, &parentIndex)
 	if err != nil {
 		return e, err
 	}
 
-	var childIndex uint32
+	var childIndex fileArray.Offset
 	err = binary.Read(reader, binary.LittleEndian, &childIndex)
 	if err != nil {
 		return e, err
