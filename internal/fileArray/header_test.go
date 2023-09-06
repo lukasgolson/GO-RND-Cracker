@@ -1,6 +1,7 @@
 package fileArray
 
 import (
+	"awesomeProject/internal/number"
 	"awesomeProject/internal/serialization"
 	"bytes"
 	"testing"
@@ -8,7 +9,7 @@ import (
 
 func TestGenerateHeader(t *testing.T) {
 
-	Num := serialization.NewNumber(64)
+	Num := number.NewNumber(64)
 
 	headerBytes := generateHeader(Num)
 
@@ -29,9 +30,9 @@ func TestGenerateHeader(t *testing.T) {
 
 func TestReadHeader(t *testing.T) {
 
-	Num := serialization.NewNumber(64)
+	Num := number.NewNumber(64)
 
-	headerBytes := generateHeader(serialization.Number{})
+	headerBytes := generateHeader(number.Number{})
 
 	header, err := readHeader(headerBytes)
 	if err != nil {
@@ -72,7 +73,7 @@ func TestReadHeaderTooShort(t *testing.T) {
 
 func TestVerifyHeader(t *testing.T) {
 
-	Num := serialization.NewNumber(64)
+	Num := number.NewNumber(64)
 
 	headerBytes := generateHeader(Num)
 

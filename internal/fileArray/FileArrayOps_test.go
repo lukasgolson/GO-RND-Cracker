@@ -1,7 +1,7 @@
 package fileArray
 
 import (
-	"awesomeProject/internal/serialization"
+	"awesomeProject/internal/number"
 	"os"
 	"testing"
 )
@@ -13,16 +13,16 @@ func TestAppendItemSpace(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fA, err := NewFileArray(serialization.Number{}, tmpFile.Name())
+	fA, err := NewFileArray(number.Number{}, tmpFile.Name())
 
-	num := serialization.NewNumber(42)
+	num := number.NewNumber(42)
 
 	err = fA.expandMemoryMapSize(int64(num.StrideLength()))
 	if err != nil {
 		t.Fatalf("Failed to expand memory map size: %v", err)
 	}
 
-	err = AppendItem(fA, num)
+	_, err = Append(fA, num)
 	if err != nil {
 		t.Fatalf("Failed to append item when space is available: %v", err)
 	}
@@ -36,11 +36,11 @@ func TestAppendItemNoSpace(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fA, err := NewFileArray(serialization.Number{}, tmpFile.Name())
+	fA, err := NewFileArray(number.Number{}, tmpFile.Name())
 
-	num := serialization.NewNumber(42)
+	num := number.NewNumber(42)
 
-	err = AppendItem(fA, num)
+	_, err = Append(fA, num)
 
 	if r := recover(); r != nil {
 		t.Fatalf("Failed to append item when space is not available: %v", err)
@@ -58,9 +58,9 @@ func TestSetItemAtIndex(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fA, err := NewFileArray(serialization.Number{}, tmpFile.Name())
+	fA, err := NewFileArray(number.Number{}, tmpFile.Name())
 
-	num := serialization.NewNumber(42)
+	num := number.NewNumber(42)
 
 	err = SetItemAtIndex(fA, num, 0)
 	if err != nil {
@@ -75,9 +75,9 @@ func TestSetItemAtIndexWithIndexOutOfBounds(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fA, err := NewFileArray(serialization.Number{}, tmpFile.Name())
+	fA, err := NewFileArray(number.Number{}, tmpFile.Name())
 
-	num := serialization.NewNumber(42)
+	num := number.NewNumber(42)
 
 	err = SetItemAtIndex(fA, num, 1)
 	if err == nil {
@@ -92,16 +92,16 @@ func TestGetItemFromIndex(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fA, err := NewFileArray(serialization.Number{}, tmpFile.Name())
+	fA, err := NewFileArray(number.Number{}, tmpFile.Name())
 
-	num := serialization.NewNumber(128)
+	num := number.NewNumber(128)
 
-	err = SetItemAtIndex[serialization.Number](fA, num, 0)
+	err = SetItemAtIndex[number.Number](fA, num, 0)
 	if err != nil {
 		t.Fatalf("Failed to set item at index: %v", err)
 	}
 
-	item, err := GetItemFromIndex[serialization.Number](fA, 0)
+	item, err := GetItemFromIndex[number.Number](fA, 0)
 
 	if err != nil {
 		t.Fatalf("Failed to get item from index: %v", err)
@@ -121,7 +121,7 @@ func TestAppendItemAndCount(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fileArray, err := NewFileArray(serialization.Number{}, tmpFile.Name())
+	fileArray, err := NewFileArray(number.Number{}, tmpFile.Name())
 
 	if err != nil {
 		t.Fatalf("Failed to create file array: %v", err)
@@ -129,8 +129,8 @@ func TestAppendItemAndCount(t *testing.T) {
 
 	//Repeatedly append items to the file array and check the count
 	for i := 0; i < 100; i++ {
-		num := serialization.NewNumber(int64(i))
-		err = AppendItem(fileArray, num)
+		num := number.NewNumber(int64(i))
+		_, err = Append(fileArray, num)
 		if err != nil {
 			t.Fatalf("Failed to append item: %v", err)
 		}
@@ -140,7 +140,7 @@ func TestAppendItemAndCount(t *testing.T) {
 			t.Fatalf("Count() returned %d, expected %d", count, i+1)
 		}
 
-		item, err := GetItemFromIndex[serialization.Number](fileArray, uint64(i))
+		item, err := GetItemFromIndex[number.Number](fileArray, uint64(i))
 		if err != nil {
 			t.Fatalf("Failed to get item from index: %v", err)
 		}
@@ -159,16 +159,16 @@ func TestGetItemFromIndexWithIndexOutOfBounds(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fA, err := NewFileArray(serialization.Number{}, tmpFile.Name())
+	fA, err := NewFileArray(number.Number{}, tmpFile.Name())
 
-	num := serialization.NewNumber(128)
+	num := number.NewNumber(128)
 
-	err = SetItemAtIndex[serialization.Number](fA, num, 0)
+	err = SetItemAtIndex[number.Number](fA, num, 0)
 	if err != nil {
 		t.Fatalf("Failed to set item at index: %v", err)
 	}
 
-	_, err = GetItemFromIndex[serialization.Number](fA, 1)
+	_, err = GetItemFromIndex[number.Number](fA, 1)
 
 	if err == nil {
 		t.Fatalf("GetItemFromIndex did not fail with index out of bounds")
@@ -184,16 +184,16 @@ func TestGetItemFromIndexWithIndexEqualToCount(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fA, err := NewFileArray(serialization.Number{}, tmpFile.Name())
+	fA, err := NewFileArray(number.Number{}, tmpFile.Name())
 
-	num := serialization.NewNumber(128)
+	num := number.NewNumber(128)
 
-	err = SetItemAtIndex[serialization.Number](fA, num, 0)
+	err = SetItemAtIndex[number.Number](fA, num, 0)
 	if err != nil {
 		t.Fatalf("Failed to set item at index: %v", err)
 	}
 
-	_, err = GetItemFromIndex[serialization.Number](fA, 0)
+	_, err = GetItemFromIndex[number.Number](fA, 0)
 
 	if err != nil {
 		t.Fatalf("GetItemFromIndex failed with index equal to count")
@@ -209,7 +209,7 @@ func TestAppendAndGetItem(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fileArray, err := NewFileArray(serialization.Number{}, tmpFile.Name())
+	fileArray, err := NewFileArray(number.Number{}, tmpFile.Name())
 
 	if err != nil {
 		t.Fatalf("Failed to create file array: %v", err)
@@ -219,8 +219,8 @@ func TestAppendAndGetItem(t *testing.T) {
 
 	//Repeatedly append items to the file array
 	for i := 0; i < count; i++ {
-		num := serialization.NewNumber(int64(i))
-		err = AppendItem(fileArray, num)
+		num := number.NewNumber(int64(i))
+		_, err = Append(fileArray, num)
 		if err != nil {
 			t.Fatalf("Failed to append item: %v", err)
 		}
@@ -228,7 +228,7 @@ func TestAppendAndGetItem(t *testing.T) {
 
 	//Repeatedly get items from the file array
 	for i := 0; i < count; i++ {
-		item, err := GetItemFromIndex[serialization.Number](fileArray, uint64(i))
+		item, err := GetItemFromIndex[number.Number](fileArray, uint64(i))
 		if err != nil {
 			t.Fatalf("Failed to get item from index: %v", err)
 		}
@@ -246,7 +246,7 @@ func TestShrinkwrapFile(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fileArray, err := NewFileArray(serialization.Number{}, tmpFile.Name())
+	fileArray, err := NewFileArray(number.Number{}, tmpFile.Name())
 
 	if err != nil {
 		t.Fatalf("Failed to create file array: %v", err)
@@ -258,9 +258,9 @@ func TestShrinkwrapFile(t *testing.T) {
 	}
 	initialSize := fi.Size()
 
-	num := serialization.NewNumber(42)
+	num := number.NewNumber(42)
 
-	err = AppendItem(fileArray, num)
+	_, err = Append(fileArray, num)
 	if err != nil {
 		t.Fatalf("Failed to append item: %v", err)
 	}
@@ -276,7 +276,7 @@ func TestShrinkwrapFile(t *testing.T) {
 	}
 	expandedSize := fi.Size()
 
-	err = ShrinkWrapFileArray[serialization.Number](fileArray)
+	err = ShrinkWrapFileArray[number.Number](fileArray)
 
 	if err != nil {
 		t.Fatalf("Failed to shrinkwrap file: %v", err)

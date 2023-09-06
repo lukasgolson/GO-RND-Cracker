@@ -6,8 +6,6 @@ import (
 )
 
 type Tree struct {
-	Root *Node
-
 	Nodes *fileArray.FileArray
 	Edges *fileArray.FileArray
 
@@ -30,6 +28,41 @@ func NewTree(filename string) (*Tree, error) {
 	}
 
 	return bkTree, nil
+}
+
+func (tree *Tree) getFileNames() (string, string) {
+	return tree.Nodes.GetFileName(), tree.Edges.GetFileName()
+}
+
+func (tree *Tree) isEmpty() bool {
+	return tree.Nodes.Count() == 0
+}
+
+func (tree *Tree) addNode(data [32]byte, seed int32) (uint32, error) {
+
+	id := uint32(tree.Nodes.Count())
+
+	_, err := fileArray.Append[Node](tree.Nodes, *NewNode(id, data, seed))
+
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+
+func (tree *Tree) AddEdge(parentIndex, childIndex, distance uint32) (uint64, error) {
+	newEdge := NewEdge(parentIndex, childIndex, distance)
+	id, err := fileArray.Append(tree.Edges, *newEdge)
+	return id, err
+}
+
+func (tree *Tree) getNodeByIndex(index uint32) (Node, error) {
+	return fileArray.GetItemFromIndex[Node](tree.Nodes, uint64(index))
+}
+
+func (tree *Tree) getEdgeByIndex(index uint64) (Edge, error) {
+	return fileArray.GetItemFromIndex[Edge](tree.Edges, index)
 }
 
 func (tree *Tree) Close() error {

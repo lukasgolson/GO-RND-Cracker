@@ -1,12 +1,12 @@
 package algorithms
 
-func MeyersDifferenceAlgorithm(s1 []byte, s2 []byte) uint16 {
+func MeyersDifferenceAlgorithm(s1 []byte, s2 []byte) uint32 {
 
 	if len(s1) == 0 {
-		return uint16(len(s2)) // Return the length of s2 as the score
+		return uint32(len(s2)) // Return the length of s2 as the score
 	}
 	if len(s2) == 0 {
-		return uint16(len(s1)) // Return the length of s1 as the score
+		return uint32(len(s1)) // Return the length of s1 as the score
 	}
 
 	score := uint16(len(s2))
@@ -49,5 +49,5 @@ func MeyersDifferenceAlgorithm(s1 []byte, s2 []byte) uint16 {
 		mv = ph & xv
 	}
 
-	return score
+	return uint32(score)
 }

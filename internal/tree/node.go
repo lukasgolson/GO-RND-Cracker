@@ -5,15 +5,15 @@ import (
 	"io"
 )
 
-const FixedWordSize = 32
+const NodeWordSize = 32
 
 type Node struct {
 	ID   uint32
-	Word [FixedWordSize]byte
+	Word [NodeWordSize]byte
 	Seed int32
 }
 
-func NewNode(ID uint32, word [FixedWordSize]byte, seed int32) *Node {
+func NewNode(ID uint32, word [NodeWordSize]byte, seed int32) *Node {
 	return &Node{
 		ID:   ID,
 		Word: word,
@@ -47,7 +47,7 @@ func (n Node) DeserializeFromBinaryStream(reader io.Reader) (Node, error) {
 		return n, err
 	}
 
-	var word [FixedWordSize]byte
+	var word [NodeWordSize]byte
 	err = binary.Read(reader, binary.LittleEndian, &word)
 	if err != nil {
 		return n, err
