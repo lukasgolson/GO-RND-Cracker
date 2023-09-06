@@ -1,18 +1,18 @@
 package tree
 
 import (
-	"awesomeProject/internal/fileArray"
+	"awesomeProject/internal/serialization"
 	"encoding/binary"
 	"io"
 )
 
 type Edge struct {
-	ParentIndex fileArray.Offset
-	ChildIndex  fileArray.Offset
+	ParentIndex serialization.Offset
+	ChildIndex  serialization.Offset
 	Distance    uint32
 }
 
-func NewEdge(parentIndex fileArray.Offset, childIndex fileArray.Offset, distance uint32) *Edge {
+func NewEdge(parentIndex serialization.Offset, childIndex serialization.Offset, distance uint32) *Edge {
 	return &Edge{
 		ParentIndex: parentIndex,
 		ChildIndex:  childIndex,
@@ -40,13 +40,13 @@ func (e Edge) SerializeToBinaryStream(writer io.Writer) error {
 }
 
 func (e Edge) DeserializeFromBinaryStream(reader io.Reader) (Edge, error) {
-	var parentIndex fileArray.Offset
+	var parentIndex serialization.Offset
 	err := binary.Read(reader, binary.LittleEndian, &parentIndex)
 	if err != nil {
 		return e, err
 	}
 
-	var childIndex fileArray.Offset
+	var childIndex serialization.Offset
 	err = binary.Read(reader, binary.LittleEndian, &childIndex)
 	if err != nil {
 		return e, err
@@ -65,8 +65,8 @@ func (e Edge) DeserializeFromBinaryStream(reader io.Reader) (Edge, error) {
 	return e, nil
 }
 
-func (e Edge) StrideLength() uint64 {
-	return uint64(binary.Size(e.ParentIndex) + binary.Size(e.ChildIndex) + binary.Size(e.Distance))
+func (e Edge) StrideLength() serialization.Length {
+	return serialization.Length(binary.Size(e.ParentIndex) + binary.Size(e.ChildIndex) + binary.Size(e.Distance))
 }
 
 func (e Edge) IDByte() byte {

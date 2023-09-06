@@ -1,6 +1,7 @@
 package number
 
 import (
+	"awesomeProject/internal/serialization"
 	"bytes"
 	"encoding/binary"
 	"testing"
@@ -64,7 +65,7 @@ func TestNumberSerializationAndDeserialization(t *testing.T) {
 
 func TestNumberSerializedSize(t *testing.T) {
 	testNumber := NewNumber(42)
-	expectedSize := uint64(binary.Size(testNumber))
+	expectedSize := serialization.Length(binary.Size(testNumber))
 
 	serializedSize := testNumber.StrideLength()
 

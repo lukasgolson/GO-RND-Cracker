@@ -18,7 +18,7 @@ type Header struct {
 	version      uint8
 	serializerID uint8
 	structHash   uint32
-	strideLength uint64
+	strideLength serialization.Length
 }
 
 func generateHeader[T serialization.Serializer[T]](serializer T) []byte {
@@ -39,7 +39,7 @@ func generateHeader[T serialization.Serializer[T]](serializer T) []byte {
 	copy(header[7:8], serializerID)
 
 	binary.LittleEndian.PutUint32(header[8:12], serialization.GenerateStructStructureHash(serializer))
-	binary.LittleEndian.PutUint64(header[12:20], serializer.StrideLength())
+	binary.LittleEndian.PutUint64(header[12:20], uint64(serializer.StrideLength()))
 
 	binary.LittleEndian.PutUint64(header[20:28], 0)
 
@@ -62,7 +62,7 @@ func readHeader(header []byte) (Header, error) {
 
 	h.structHash = binary.LittleEndian.Uint32(header[8:12])
 
-	h.strideLength = binary.LittleEndian.Uint64(header[12:20])
+	h.strideLength = serialization.Length(binary.LittleEndian.Uint64(header[12:20]))
 
 	return h, nil
 }

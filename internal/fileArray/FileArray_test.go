@@ -2,6 +2,7 @@ package fileArray
 
 import (
 	"awesomeProject/internal/number"
+	"awesomeProject/internal/serialization"
 	"math/rand"
 	"os"
 	"testing"
@@ -90,17 +91,17 @@ func TestOpenMmap(t *testing.T) {
 }
 
 func generateTestCases(numTestCases int) []struct {
-	value Offset
+	value serialization.Offset
 } {
 	testCases := make([]struct {
-		value Offset
+		value serialization.Offset
 	}, numTestCases)
 
 	for i := 0; i <= numTestCases-2; i++ {
-		testCases[i].value = Offset(rand.Intn((i * 10) + 1)) // Generate values algorithmically
+		testCases[i].value = serialization.Offset(rand.Intn((i * 10) + 1)) // Generate values algorithmically
 	}
 
-	testCases[numTestCases-1].value = MaxOffset() // Generate values algorithmically
+	testCases[numTestCases-1].value = serialization.MaxOffset() // Generate values algorithmically
 
 	return testCases
 }
@@ -189,7 +190,7 @@ func TestFileArraySetCount(t *testing.T) {
 	}
 
 	// Test the setCount() method
-	expectedCount := Offset(42)
+	expectedCount := serialization.Offset(42)
 	fileArray.setCount(expectedCount)
 	count := fileArray.Count()
 	if count != expectedCount {
@@ -212,7 +213,7 @@ func TestFileArrayIncrementCount(t *testing.T) {
 	}
 
 	// Test the incrementCount() method
-	expectedCount := Offset(42)
+	expectedCount := serialization.Offset(42)
 	fileArray.setCount(expectedCount)
 	fileArray.incrementCount()
 	count := fileArray.Count()
@@ -251,7 +252,7 @@ func TestFileArray_FileRetrieve(t *testing.T) {
 	}
 
 	for i := 0; i <= 24; i++ {
-		num, err := GetItemFromIndex[number.Number](fA2, Offset(i))
+		num, err := GetItemFromIndex[number.Number](fA2, serialization.Offset(i))
 		if err != nil {
 			t.Fatalf("Failed to get item from index: %v", err)
 		}

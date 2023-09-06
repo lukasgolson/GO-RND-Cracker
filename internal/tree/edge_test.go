@@ -1,6 +1,7 @@
 package tree
 
 import (
+	"awesomeProject/internal/serialization"
 	"bytes"
 	"testing"
 )
@@ -54,7 +55,7 @@ func TestEdgeSerializedSize(t *testing.T) {
 		t.Fatalf("Failed to serialize edge: %v", err)
 	}
 
-	if size != uint64(len(buffer.Bytes())) {
+	if size != serialization.Length(len(buffer.Bytes())) {
 		t.Fatalf("StrideLength() did not return the correct size. Got %d, expected %d", size, len(buffer.Bytes()))
 	}
 }

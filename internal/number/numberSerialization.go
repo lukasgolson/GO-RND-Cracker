@@ -1,6 +1,7 @@
 package number
 
 import (
+	"awesomeProject/internal/serialization"
 	"encoding/binary"
 	"io"
 )
@@ -35,8 +36,8 @@ func (number Number) DeserializeFromBinaryStream(reader io.Reader) (Number, erro
 
 }
 
-func (number Number) StrideLength() uint64 {
-	return uint64(binary.Size(number.Value))
+func (number Number) StrideLength() serialization.Length {
+	return serialization.Length(binary.Size(number.Value))
 }
 
 func (number Number) IDByte() byte {

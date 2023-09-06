@@ -1,4 +1,4 @@
-package fileArray
+package serialization
 
 // Offset represents an offset within a file array.
 type Offset uint64

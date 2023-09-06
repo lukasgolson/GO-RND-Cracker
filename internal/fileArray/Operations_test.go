@@ -2,6 +2,7 @@ package fileArray
 
 import (
 	"awesomeProject/internal/number"
+	"awesomeProject/internal/serialization"
 	"os"
 	"testing"
 )
@@ -136,11 +137,11 @@ func TestAppendItemAndCount(t *testing.T) {
 		}
 
 		count := fileArray.Count()
-		if count != Length(i+1) {
+		if count != serialization.Length(i+1) {
 			t.Fatalf("Count() returned %d, expected %d", count, i+1)
 		}
 
-		item, err := GetItemFromIndex[number.Number](fileArray, Offset(i))
+		item, err := GetItemFromIndex[number.Number](fileArray, serialization.Offset(i))
 		if err != nil {
 			t.Fatalf("Failed to get item from index: %v", err)
 		}
@@ -228,7 +229,7 @@ func TestAppendAndGetItem(t *testing.T) {
 
 	//Repeatedly get items from the file array
 	for i := 0; i < count; i++ {
-		item, err := GetItemFromIndex[number.Number](fileArray, Offset(i))
+		item, err := GetItemFromIndex[number.Number](fileArray, serialization.Offset(i))
 		if err != nil {
 			t.Fatalf("Failed to get item from index: %v", err)
 		}
@@ -289,9 +290,9 @@ func TestShrinkwrapFile(t *testing.T) {
 		t.Fatalf("ShrinkWrapFileArray did not shrink the file. Expanded size: %d, Shrunk size: %d", expandedSize, shrunkSize)
 	}
 
-	expectedSize := uint64(initialSize) + (num.StrideLength())
+	expectedSize := serialization.Length(initialSize) + (num.StrideLength())
 
-	if uint64(shrunkSize) < expectedSize {
+	if serialization.Length(shrunkSize) < expectedSize {
 		t.Fatalf("ShrinkWrapFileArray shrunk the file smaller than possible. Min size: %d, Shrunk size: %d", expectedSize, shrunkSize)
 	}
 

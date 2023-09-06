@@ -1,13 +1,15 @@
-package fileIndex
+package fileLinkedList
 
 import (
+	"awesomeProject/internal/serialization"
 	"encoding/binary"
 	"io"
 )
 
 type Index struct {
-	itemID int64
-	offset int64
+	itemID serialization.Offset
+	offset serialization.Offset
+	count  serialization.Length
 }
 
 func (i Index) SerializeToBinaryStream(writer io.Writer) error {
@@ -43,8 +45,8 @@ func (i Index) DeserializeFromBinaryStream(reader io.Reader) (Index, error) {
 	return i, nil
 }
 
-func (i Index) StrideLength() uint64 {
-	return uint64(binary.Size(i.itemID) + binary.Size(i.offset))
+func (i Index) StrideLength() serialization.Length {
+	return serialization.Length(binary.Size(i.itemID) + binary.Size(i.offset))
 }
 
 func (i Index) IDByte() byte {

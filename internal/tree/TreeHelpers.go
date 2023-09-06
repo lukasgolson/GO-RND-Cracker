@@ -1,13 +1,15 @@
 package tree
 
-import "awesomeProject/internal/fileArray"
+import (
+	"awesomeProject/internal/serialization"
+)
 
 func (tree *Tree) getNextNodeID() uint32 {
 	return uint32(tree.Nodes.Count())
 }
 
-func (tree *Tree) findChildNodeWithDistance(parentIndex fileArray.Offset, distance uint32) (fileArray.Offset, bool) {
-	for i := fileArray.Offset(0); i < tree.Edges.Count(); i++ {
+func (tree *Tree) findChildNodeWithDistance(parentIndex serialization.Offset, distance uint32) (serialization.Offset, bool) {
+	for i := serialization.Offset(0); i < tree.Edges.Count(); i++ {
 		edge, err := tree.getEdgeByIndex(i)
 		if err != nil {
 			continue
@@ -21,12 +23,12 @@ func (tree *Tree) findChildNodeWithDistance(parentIndex fileArray.Offset, distan
 	return 0, false
 }
 
-func (tree *Tree) getEgressArcs(u fileArray.Offset) []Edge {
+func (tree *Tree) getEgressArcs(u serialization.Offset) []Edge {
 	// Create a slice to store egress arcs
 	egressArcs := make([]Edge, 0)
 
 	// Iterate through the edges in the tree
-	for i := fileArray.Offset(0); i < tree.Edges.Count(); i++ {
+	for i := serialization.Offset(0); i < tree.Edges.Count(); i++ {
 
 		edge, err := tree.getEdgeByIndex(i)
 		if err != nil {
