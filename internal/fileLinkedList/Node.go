@@ -11,6 +11,10 @@ type LinkedListNode[T serialization.Serializer[T]] struct {
 	Item       T
 }
 
+func NewLinkedListNode[T serialization.Serializer[T]](nextOffset serialization.Offset, item T) LinkedListNode[T] {
+	return LinkedListNode[T]{NextOffset: nextOffset, Item: item}
+}
+
 func (l LinkedListNode[T]) SerializeToBinaryStream(writer io.Writer) error {
 
 	err := binary.Write(writer, binary.LittleEndian, l.NextOffset)

@@ -9,7 +9,10 @@ import (
 type Index struct {
 	itemID serialization.Offset
 	offset serialization.Offset
-	count  serialization.Length
+}
+
+func NewIndex(itemID serialization.Offset, offset serialization.Offset) Index {
+	return Index{itemID: itemID, offset: offset}
 }
 
 func (i Index) SerializeToBinaryStream(writer io.Writer) error {
