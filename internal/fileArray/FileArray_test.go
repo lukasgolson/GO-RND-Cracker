@@ -2,7 +2,6 @@ package fileArray
 
 import (
 	"awesomeProject/internal/number"
-	"math"
 	"math/rand"
 	"os"
 	"testing"
@@ -101,7 +100,7 @@ func generateTestCases(numTestCases int) []struct {
 		testCases[i].value = Offset(rand.Intn((i * 10) + 1)) // Generate values algorithmically
 	}
 
-	testCases[numTestCases-1].value = math.MaxUint64 // Generate values algorithmically
+	testCases[numTestCases-1].value = MaxOffset() // Generate values algorithmically
 
 	return testCases
 }

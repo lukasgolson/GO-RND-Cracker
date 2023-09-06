@@ -66,7 +66,7 @@ func (tree *Tree) FindClosestElement(rootIndex fileArray.Offset, word [NodeWordS
 		u := S[len(S)-1] // Pop the last node from S
 		S = S[:len(S)-1]
 
-		n, err := tree.getNodeByIndex(fileArray.Offset(u))
+		n, err := tree.getNodeByIndex(u)
 
 		if err != nil {
 			return nil, math.MaxUint32
@@ -76,11 +76,11 @@ func (tree *Tree) FindClosestElement(rootIndex fileArray.Offset, word [NodeWordS
 
 		if dU < bestDistance {
 
-			bestWord, err = tree.getNodeByIndex(fileArray.Offset(u))
+			bestWord, err = tree.getNodeByIndex(u)
 			bestDistance = dU
 		}
 
-		for _, edge := range tree.getEgressArcs(fileArray.Offset(u)) {
+		for _, edge := range tree.getEgressArcs(u) {
 			v := edge.ChildIndex
 			dUV := uint32(util.Abs(int32(edge.Distance) - int32(dU)))
 
