@@ -40,43 +40,50 @@ func NewFileLinkedList[T serialization.Serializer[T]](filename string) (*FileLin
 // getBaseOffsetFromListID retrieves the base offset associated with a list ID.
 // It checks if the list ID is within bounds and returns a boolean indicating existence,
 // the base offset, and an error if any.
-func (list *FileLinkedList[T]) getBaseOffsetFromListID(listID serialization.Offset) (bool, serialization.Offset, error) {
+func (list *FileLinkedList[T]) getBaseOffsetFromListID(listID serialization.Offset) (bool, Index, error) {
 	indexCount := list.indexArray.Count()
 
-	if listID >= indexCount {
-		return false, indexCount, nil
+	if indexCount == 0 {
+		return false, *new(Index), nil
 	}
 
-	offset, err := fileArray.GetItemFromIndex[Index](&list.indexArray, listID)
+	if listID >= indexCount {
+		return false, *new(Index), nil
+	}
+
+	indexEntry, err := fileArray.GetItemFromIndex[Index](&list.indexArray, listID)
 
 	if err != nil {
-		return false, 0, err
+		return false, *new(Index), err
 	}
 
-	if offset.offset == serialization.MaxOffset() {
-		return false, 0, nil
+	if indexEntry.offset == serialization.MaxOffset() {
+		return false, *new(Index), nil
 	}
 
-	return true, offset.offset, nil
+	return true, indexEntry, nil
 }
 
 // setBaseOffsetOnListID sets the base offset for a given list ID.
 // If the list ID is beyond the current index, it updates the index as well.
 // Returns an error if any.
-func (list *FileLinkedList[T]) setBaseOffsetOnListID(listID serialization.Offset, offset serialization.Offset) error {
+func (list *FileLinkedList[T]) setBaseOffsetOnListID(listID serialization.Offset, offset serialization.Offset, length serialization.Length) error {
+	indexCount := list.indexArray.Count()
 
-	IndexCount := list.indexArray.Count()
+	if listID >= indexCount {
+		numItemsToAdd := listID - indexCount + 1
 
-	if listID > IndexCount {
-		for i := IndexCount; i < listID; i++ {
-			err := fileArray.SetItemAtIndex(&list.indexArray, NewIndex(i, serialization.MaxOffset()), i)
+		for i := indexCount; i < indexCount+numItemsToAdd; i++ {
+			newIndex := NewIndex(i, serialization.MaxOffset(), 0)
+
+			err := fileArray.SetItemAtIndex(&list.indexArray, newIndex, i)
 			if err != nil {
 				return err
 			}
 		}
 	}
 
-	err := fileArray.SetItemAtIndex(&list.indexArray, NewIndex(listID, offset), listID)
+	err := fileArray.SetItemAtIndex(&list.indexArray, NewIndex(listID, offset, length), listID)
 	if err != nil {
 		return err
 	}
@@ -88,7 +95,7 @@ func (list *FileLinkedList[T]) setBaseOffsetOnListID(listID serialization.Offset
 // If the list doesn't exist, it creates a new list.
 // Returns an error if any.
 func (list *FileLinkedList[T]) Add(listID serialization.Offset, item T) error {
-	listExists, listOffset, err := list.getBaseOffsetFromListID(listID)
+	listExists, indexEntry, err := list.getBaseOffsetFromListID(listID)
 
 	if err != nil {
 		return err
@@ -105,18 +112,19 @@ func (list *FileLinkedList[T]) Add(listID serialization.Offset, item T) error {
 
 	} else {
 
-		currentHeadNode, err := fileArray.GetItemFromIndex[LinkedListNode[T]](&list.elementsArray, listOffset)
-		if err != nil {
-			return err
-		}
+		//currentHeadNode, err := fileArray.GetItemFromIndex[LinkedListNode[T]](&list.elementsArray, indexEntry.offset)
 
-		newOffset, err = fileArray.Append(&list.elementsArray, NewLinkedListNode[T](currentHeadNode.NextOffset, item))
+		newOffset, err = fileArray.Append(&list.elementsArray, NewLinkedListNode[T](indexEntry.offset, item))
 		if err != nil {
 			return err
 		}
 	}
 
-	err = list.setBaseOffsetOnListID(listID, newOffset)
+	if err != nil {
+		return err
+	}
+
+	err = list.setBaseOffsetOnListID(listID, newOffset, indexEntry.length+1)
 	if err != nil {
 		return err
 	}
@@ -128,44 +136,43 @@ func (list *FileLinkedList[T]) Add(listID serialization.Offset, item T) error {
 // Returns the item and an error if any. If the list or index is out of bounds, it returns an error.
 func (list *FileLinkedList[T]) Get(listID serialization.Offset, index serialization.Offset) (T, error) {
 	var item T
-
-	listExists, baseOffset, err := list.getBaseOffsetFromListID(listID)
+	listExists, indexEntry, err := list.getBaseOffsetFromListID(listID)
 
 	if err != nil {
-		return item, err
+		return item, fmt.Errorf("list index error" + err.Error())
 	}
 
 	if !listExists {
 		return item, fmt.Errorf("list does not exist")
 	}
 
-	currentOffset := baseOffset
+	index = indexEntry.length - index
 
-	for i := serialization.Offset(0); i < index; i++ {
-		currentNode, err := fileArray.GetItemFromIndex[LinkedListNode[T]](&list.elementsArray, currentOffset)
+	indexCounter := serialization.Offset(0)
+
+	for nextOffset := indexEntry.offset; nextOffset != serialization.MaxOffset(); {
+		currentNode, err := fileArray.GetItemFromIndex[LinkedListNode[T]](&list.elementsArray, nextOffset)
 		if err != nil {
 			return item, err
 		}
-		currentOffset = currentNode.NextOffset
 
-		if currentOffset == serialization.MaxOffset() {
-			return item, fmt.Errorf("index out of bounds")
+		nextOffset = currentNode.NextOffset
+
+		indexCounter++
+
+		if indexCounter == index {
+			return currentNode.Item, nil
 		}
 	}
 
-	currentNode, err := fileArray.GetItemFromIndex[LinkedListNode[T]](&list.elementsArray, currentOffset)
-	if err != nil {
-		return item, err
-	}
-
-	return currentNode.Item, nil
+	return item, fmt.Errorf("index out of bounds test")
 }
 
 // Remove removes an item from the specified list ID that matches the provided indexItem.
 // Returns an error if the item is not found or if any other error occurs.
 func (list *FileLinkedList[T]) Remove(listID serialization.Offset, indexItem T) error {
 
-	listExists, baseOffset, err := list.getBaseOffsetFromListID(listID)
+	listExists, indexEntry, err := list.getBaseOffsetFromListID(listID)
 
 	if err != nil {
 		return err
@@ -182,9 +189,9 @@ func (list *FileLinkedList[T]) Remove(listID serialization.Offset, indexItem T) 
 		return err
 	}
 
-	previousOffset := baseOffset
-	currentOffset := baseOffset
-	nextOffset := baseOffset
+	previousOffset := indexEntry.offset
+	currentOffset := indexEntry.offset
+	nextOffset := indexEntry.offset
 
 	for nextOffset != serialization.MaxOffset() {
 
@@ -210,8 +217,13 @@ func (list *FileLinkedList[T]) Remove(listID serialization.Offset, indexItem T) 
 
 		if bytes.Equal(indexBuffer.Bytes(), itemBuffer.Bytes()) {
 
-			if currentOffset == baseOffset {
-				err = list.setBaseOffsetOnListID(listID, nextOffset)
+			if currentOffset == indexEntry.offset {
+
+				if err != nil {
+					return err
+				}
+
+				err = list.setBaseOffsetOnListID(listID, nextOffset, indexEntry.length-1)
 			} else {
 				previousItem, err := fileArray.GetItemFromIndex[LinkedListNode[T]](&list.elementsArray, previousOffset)
 				if err != nil {
@@ -222,7 +234,7 @@ func (list *FileLinkedList[T]) Remove(listID serialization.Offset, indexItem T) 
 				err = fileArray.SetItemAtIndex[LinkedListNode[T]](&list.elementsArray, previousItem, previousOffset)
 			}
 
-			err = fileArray.SetItemAtIndex[LinkedListNode[T]](&list.elementsArray, NewLinkedListNode[T](serialization.MaxOffset(), nil), currentOffset)
+			err = fileArray.SetItemAtIndex[LinkedListNode[T]](&list.elementsArray, NewLinkedListNode[T](serialization.MaxOffset(), *new(T)), currentOffset)
 			if err != nil {
 				return err
 			}
@@ -240,7 +252,7 @@ func (list *FileLinkedList[T]) Remove(listID serialization.Offset, indexItem T) 
 // Returns true if the item is found, false if not, and an error if any.
 func (list *FileLinkedList[T]) Contains(listID serialization.Offset, item T) (bool, error) {
 
-	listExists, baseOffset, err := list.getBaseOffsetFromListID(listID)
+	listExists, indexEntry, err := list.getBaseOffsetFromListID(listID)
 
 	if err != nil {
 		return false, err
@@ -256,7 +268,7 @@ func (list *FileLinkedList[T]) Contains(listID serialization.Offset, item T) (bo
 		return false, err
 	}
 
-	nextOffset := baseOffset
+	nextOffset := indexEntry.offset
 
 	for nextOffset != serialization.MaxOffset() {
 
