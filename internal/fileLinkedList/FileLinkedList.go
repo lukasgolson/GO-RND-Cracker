@@ -219,11 +219,18 @@ func (list *FileLinkedList[T]) Remove(listID serialization.Offset, indexItem T) 
 
 			if currentOffset == indexEntry.offset {
 
-				if err != nil {
-					return err
+				if nextOffset == serialization.MaxOffset() {
+					err = list.setBaseOffsetOnListID(listID, serialization.MaxOffset(), 0)
+					if err != nil {
+						return err
+					}
+					return nil
+				} else {
+					err = list.setBaseOffsetOnListID(listID, nextOffset, indexEntry.length-1)
+					if err != nil {
+						return err
+					}
 				}
-
-				err = list.setBaseOffsetOnListID(listID, nextOffset, indexEntry.length-1)
 			} else {
 				previousItem, err := fileArray.GetItemFromIndex[LinkedListNode[T]](&list.elementsArray, previousOffset)
 				if err != nil {

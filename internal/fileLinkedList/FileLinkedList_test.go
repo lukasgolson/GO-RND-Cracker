@@ -324,3 +324,54 @@ func TestFileLinkedList_Contains(t *testing.T) {
 	}
 
 }
+
+func TestFileLinkedList_RemoveOne(t *testing.T) {
+	tmpFile, err := os.CreateTemp("", "test-file")
+	if err != nil {
+		t.Fatalf("Failed to create temporary file: %v", err)
+	}
+
+	defer func(tempFile *os.File) {
+		err := tempFile.Close()
+		if err != nil {
+			t.Fatalf("Failed to close temporary file: %v", err)
+		}
+	}(tmpFile)
+	defer os.Remove(tmpFile.Name())
+
+	// Create a new FileLinkedList and perform the Add operation.
+	list, err := NewFileLinkedList[number.Number](tmpFile.Name())
+	if err != nil {
+		t.Errorf("NewFileLinkedList() failed: %v", err)
+	}
+
+	testItem := number.NewNumber(24)
+	err = list.Add(0, testItem)
+	if err != nil {
+		return
+	}
+
+	contains, err := list.Contains(0, testItem)
+	if err != nil {
+		return
+	}
+
+	if !contains {
+		t.Fatalf("Contains() returned incorrect value: got %v, expected %v", contains, true)
+	}
+
+	err = list.Remove(0, testItem)
+	if err != nil {
+		t.Errorf("Remove() failed: %v", err)
+	}
+
+	contains, err = list.Contains(0, testItem)
+	if err != nil {
+		t.Errorf("Contains() failed: %v", err)
+	}
+
+	if contains {
+		t.Fatalf("Contains() returned incorrect value: got %v, expected %v", contains, false)
+	}
+
+}
