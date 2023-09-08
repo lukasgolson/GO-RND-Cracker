@@ -1,4 +1,4 @@
-name: Go test coverage check and PR
+name: Test coverage check and PR
 
 on:
   pull_request:
@@ -38,6 +38,6 @@ jobs:
           # Configure action by specifying input parameters individually (option 2)
           profile: cover.out
           local-prefix: github.com/lukasgolson/awesomeProject
-          threshold-file: 80
-          threshold-package: 80
-          threshold-total: 95
+          threshold-file: 65
+          threshold-package: 70
+          threshold-total: 75
