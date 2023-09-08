@@ -362,12 +362,12 @@ func TestFileLinkedList_RemoveOne(t *testing.T) {
 
 	err = list.Remove(0, testItem)
 	if err != nil {
-		t.Errorf("Remove() failed: %v", err)
+		t.Fatalf("Remove() failed: %v", err)
 	}
 
 	contains, err = list.Contains(0, testItem)
-	if err != nil {
-		t.Errorf("Contains() failed: %v", err)
+	if err == nil {
+		t.Errorf("Contains() did not return an error when it should have")
 	}
 
 	if contains {
