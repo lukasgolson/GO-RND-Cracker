@@ -15,7 +15,7 @@ func TestNewFileArray(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fA, err := NewFileArray(number.Number{}, tmpFile.Name())
+	fA, err := NewFileArray[number.Number](tmpFile.Name())
 	if err != nil {
 		t.Fatalf("NewFileArray returned an error: %v", err)
 	}
@@ -41,7 +41,7 @@ func TestOpenAndInitializeFile(t *testing.T) {
 	defer os.Remove(tempFile.Name())
 
 	// Call the function being tested
-	file, err := openAndInitializeFile(number.Number{}, tempFile.Name())
+	file, err := openAndInitializeFile[number.Number](tempFile.Name())
 
 	// Check for errors
 	if err != nil {
@@ -115,7 +115,7 @@ func TestFileArray_Count(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fA, err := NewFileArray(number.Number{}, tmpFile.Name())
+	fA, err := NewFileArray[number.Number](tmpFile.Name())
 	if err != nil {
 		t.Fatalf("NewFileArray returned an error: %v", err)
 	}
@@ -148,7 +148,7 @@ func TestFileArray_Close(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fA, err := NewFileArray(number.Number{}, tmpFile.Name())
+	fA, err := NewFileArray[number.Number](tmpFile.Name())
 
 	err = fA.Close()
 	if err != nil {
@@ -164,7 +164,7 @@ func TestFileArrayCountEmptyMemoryMap(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fileArray, err := NewFileArray(number.Number{}, tmpFile.Name())
+	fileArray, err := NewFileArray[number.Number](tmpFile.Name())
 
 	if err != nil {
 		t.Fatalf("Failed to create file array: %v", err)
@@ -183,7 +183,7 @@ func TestFileArraySetCount(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fileArray, err := NewFileArray(number.Number{}, tmpFile.Name())
+	fileArray, err := NewFileArray[number.Number](tmpFile.Name())
 
 	if err != nil {
 		t.Fatalf("Failed to create file array: %v", err)
@@ -206,7 +206,7 @@ func TestFileArrayIncrementCount(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fileArray, err := NewFileArray(number.Number{}, tmpFile.Name())
+	fileArray, err := NewFileArray[number.Number](tmpFile.Name())
 
 	if err != nil {
 		t.Fatalf("Failed to create file array: %v", err)
@@ -230,10 +230,10 @@ func TestFileArray_FileRetrieve(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fA, err := NewFileArray(number.Number{}, tmpFile.Name())
+	fA, err := NewFileArray[number.Number](tmpFile.Name())
 
 	for i := 0; i <= 24; i++ {
-		_, err = Append(fA, number.NewNumber(int64(i)))
+		_, err = fA.Append(number.NewNumber(int64(i)))
 	}
 
 	if err != nil {
@@ -245,14 +245,14 @@ func TestFileArray_FileRetrieve(t *testing.T) {
 		t.Fatalf("Failed to close file array: %v", err)
 	}
 
-	fA2, err := NewFileArray(number.Number{}, tmpFile.Name())
+	fA2, err := NewFileArray[number.Number](tmpFile.Name())
 
 	if err != nil {
 		t.Fatalf("Failed to create file array: %v", err)
 	}
 
 	for i := 0; i <= 24; i++ {
-		num, err := GetItemFromIndex[number.Number](fA2, serialization.Offset(i))
+		num, err := fA2.GetItemFromIndex(serialization.Offset(i))
 		if err != nil {
 			t.Fatalf("Failed to get item from index: %v", err)
 		}
