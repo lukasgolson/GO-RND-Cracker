@@ -8,8 +8,8 @@ import (
 )
 
 type FileLinkedList[T serialization.Serializer[T]] struct {
-	elementsArray fileArray.FileArray
-	indexArray    fileArray.FileArray
+	elementsArray fileArray.FileArray[LinkedListNode[T]]
+	indexArray    fileArray.FileArray[Index]
 }
 
 // NewFileLinkedList initializes a new instance of FileLinkedList[T] and its associated file arrays.
@@ -21,12 +21,12 @@ func NewFileLinkedList[T serialization.Serializer[T]](filename string) (*FileLin
 	elementsFilename := fmt.Sprintf("%s.elements.bin", filename)
 	indexFilename := fmt.Sprintf("%s.index.bin", filename)
 
-	elementsArray, err := fileArray.NewFileArray(LinkedListNode[T]{}, elementsFilename)
+	elementsArray, err := fileArray.NewFileArray[LinkedListNode[T]](elementsFilename)
 	if err != nil {
 		return nil, err
 	}
 
-	indexArray, err := fileArray.NewFileArray(LinkedListNode[T]{}, indexFilename)
+	indexArray, err := fileArray.NewFileArray[Index](indexFilename)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (list *FileLinkedList[T]) getBaseOffsetFromListID(listID serialization.Offs
 		return false, *new(Index), nil
 	}
 
-	indexEntry, err := fileArray.GetItemFromIndex[Index](&list.indexArray, listID)
+	indexEntry, err := list.indexArray.GetItemFromIndex(listID)
 
 	if err != nil {
 		return false, *new(Index), err
@@ -76,14 +76,14 @@ func (list *FileLinkedList[T]) setBaseOffsetOnListID(listID serialization.Offset
 		for i := indexCount; i < indexCount+numItemsToAdd; i++ {
 			newIndex := NewIndex(i, serialization.MaxOffset(), 0)
 
-			err := fileArray.SetItemAtIndex(&list.indexArray, newIndex, i)
+			err := list.indexArray.SetItemAtIndex(newIndex, i)
 			if err != nil {
 				return err
 			}
 		}
 	}
 
-	err := fileArray.SetItemAtIndex(&list.indexArray, NewIndex(listID, offset, length), listID)
+	err := list.indexArray.SetItemAtIndex(NewIndex(listID, offset, length), listID)
 	if err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func (list *FileLinkedList[T]) Add(listID serialization.Offset, item T) error {
 
 	if !listExists {
 
-		newOffset, err = fileArray.Append(&list.elementsArray, NewLinkedListNode[T](serialization.MaxOffset(), item))
+		newOffset, err = list.elementsArray.Append(NewLinkedListNode[T](serialization.MaxOffset(), item))
 		if err != nil {
 			return err
 		}
@@ -114,7 +114,7 @@ func (list *FileLinkedList[T]) Add(listID serialization.Offset, item T) error {
 
 		//currentHeadNode, err := fileArray.GetItemFromIndex[LinkedListNode[T]](&list.elementsArray, indexEntry.offset)
 
-		newOffset, err = fileArray.Append(&list.elementsArray, NewLinkedListNode[T](indexEntry.offset, item))
+		newOffset, err = list.elementsArray.Append(NewLinkedListNode[T](indexEntry.offset, item))
 		if err != nil {
 			return err
 		}
@@ -151,7 +151,7 @@ func (list *FileLinkedList[T]) Get(listID serialization.Offset, index serializat
 	indexCounter := serialization.Offset(0)
 
 	for nextOffset := indexEntry.offset; nextOffset != serialization.MaxOffset(); {
-		currentNode, err := fileArray.GetItemFromIndex[LinkedListNode[T]](&list.elementsArray, nextOffset)
+		currentNode, err := list.elementsArray.GetItemFromIndex(nextOffset)
 		if err != nil {
 			return item, err
 		}
@@ -197,7 +197,7 @@ func (list *FileLinkedList[T]) Remove(listID serialization.Offset, indexItem T) 
 
 		currentOffset = nextOffset
 
-		item, err := fileArray.GetItemFromIndex[LinkedListNode[T]](&list.elementsArray, nextOffset)
+		item, err := list.elementsArray.GetItemFromIndex(nextOffset)
 		if err != nil {
 			return err
 		}
@@ -228,16 +228,16 @@ func (list *FileLinkedList[T]) Remove(listID serialization.Offset, indexItem T) 
 					}
 				}
 			} else {
-				previousItem, err := fileArray.GetItemFromIndex[LinkedListNode[T]](&list.elementsArray, previousOffset)
+				previousItem, err := list.elementsArray.GetItemFromIndex(previousOffset)
 				if err != nil {
 					return err
 				}
 
 				previousItem.NextOffset = nextOffset
-				err = fileArray.SetItemAtIndex[LinkedListNode[T]](&list.elementsArray, previousItem, previousOffset)
+				err = list.elementsArray.SetItemAtIndex(previousItem, previousOffset)
 			}
 
-			err = fileArray.SetItemAtIndex[LinkedListNode[T]](&list.elementsArray, NewLinkedListNode[T](serialization.MaxOffset(), *new(T)), currentOffset)
+			err = list.elementsArray.SetItemAtIndex(NewLinkedListNode[T](serialization.MaxOffset(), *new(T)), currentOffset)
 			if err != nil {
 				return err
 			}
@@ -279,7 +279,7 @@ func (list *FileLinkedList[T]) Contains(listID serialization.Offset, item T) (bo
 
 	for nextOffset != serialization.MaxOffset() {
 
-		item, err := fileArray.GetItemFromIndex[LinkedListNode[T]](&list.elementsArray, nextOffset)
+		item, err := list.elementsArray.GetItemFromIndex(nextOffset)
 		if err != nil {
 			return false, err
 		}

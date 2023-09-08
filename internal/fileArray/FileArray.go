@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-type FileArray struct {
+type FileArray[T serialization.Serializer[T]] struct {
 	header      Header
 	memoryMap   mmap.MMap
 	backingFile *os.File
@@ -24,10 +24,12 @@ type FileArray struct {
 // Returns:
 //   - *FileArray: A pointer to the FileArray instance.
 //   - error: An error if initialization fails.
-func NewFileArray[T serialization.Serializer[T]](serializer T, filename string) (*FileArray, error) {
-	fileArray := &FileArray{}
+func NewFileArray[T serialization.Serializer[T]](filename string) (*FileArray[T], error) {
+	fileArray := &FileArray[T]{}
 
-	file, err := openAndInitializeFile(serializer, filename)
+	var serializer T
+
+	file, err := openAndInitializeFile[T](filename)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +63,9 @@ func NewFileArray[T serialization.Serializer[T]](serializer T, filename string) 
 // Returns:
 //   - *os.File: A pointer to the opened file.
 //   - error: An error if opening or initialization fails.
-func openAndInitializeFile[T serialization.Serializer[T]](serializer T, filename string) (*os.File, error) {
+func openAndInitializeFile[T serialization.Serializer[T]](filename string) (*os.File, error) {
+	var serializer T
+
 	file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		return nil, err
@@ -100,36 +104,36 @@ func openMmap(file *os.File) (mmap.MMap, error) {
 }
 
 // Count returns the current count of elements stored in the FileArray instance.
-func (fileArray *FileArray) Count() serialization.Length {
+func (fileArray *FileArray[T]) Count() serialization.Length {
 	counterSlice := fileArray.getCounterSlice()
 	count := binary.BigEndian.Uint64(counterSlice)
 	return serialization.Length(count)
 }
 
 // setCount sets the count of elements in the FileArray to the specified value.
-func (fileArray *FileArray) setCount(value serialization.Length) {
+func (fileArray *FileArray[T]) setCount(value serialization.Length) {
 
 	counterSlice := fileArray.getCounterSlice()
 	binary.BigEndian.PutUint64(counterSlice, uint64(value))
 }
 
 // incrementCount increments the count of elements in the FileArray by one.
-func (fileArray *FileArray) incrementCount() {
+func (fileArray *FileArray[T]) incrementCount() {
 	fileArray.setCount(fileArray.Count() + 1)
 }
 
 // getDataSlice returns a slice containing the data stored in the FileArray, excluding the header.
-func (fileArray *FileArray) getDataSlice() []byte {
+func (fileArray *FileArray[T]) getDataSlice() []byte {
 	return fileArray.memoryMap[headerLength:]
 }
 
 // getHeaderSlice returns a slice containing the data stored in the FileArray header.
-func (fileArray *FileArray) getHeaderSlice() []byte {
+func (fileArray *FileArray[T]) getHeaderSlice() []byte {
 	return fileArray.memoryMap[:headerLength]
 }
 
 // getHeaderSlice returns a slice containing the header data stored in the FileArray.
-func (fileArray *FileArray) getCounterSlice() []byte {
+func (fileArray *FileArray[T]) getCounterSlice() []byte {
 	return fileArray.memoryMap[headerLength-8 : headerLength]
 }
 
@@ -140,7 +144,7 @@ func (fileArray *FileArray) getCounterSlice() []byte {
 //
 // Returns:
 //   - error: An error if the expansion fails.
-func (fileArray *FileArray) expandMemoryMapSize(expansionSize int64) error {
+func (fileArray *FileArray[T]) expandMemoryMapSize(expansionSize int64) error {
 	currentSize, err := fileArray.backingFile.Seek(0, io.SeekEnd)
 	if err != nil {
 		return err
@@ -171,7 +175,7 @@ func (fileArray *FileArray) expandMemoryMapSize(expansionSize int64) error {
 //
 // Returns:
 //   - error: An error if the operation fails.
-func (fileArray *FileArray) multiplyMemoryMapSize(multiplier float64) error {
+func (fileArray *FileArray[T]) multiplyMemoryMapSize(multiplier float64) error {
 	if multiplier <= 1.0 {
 		return fmt.Errorf("multiplier should be greater than 1.0")
 	}
@@ -197,7 +201,7 @@ func (fileArray *FileArray) multiplyMemoryMapSize(multiplier float64) error {
 //
 // Returns:
 //   - error: An error if the operation fails.
-func (fileArray *FileArray) shrinkFileSizeToDataSize(itemSize serialization.Length) error {
+func (fileArray *FileArray[T]) shrinkFileSizeToDataSize(itemSize serialization.Length) error {
 
 	dataSize := int64(itemSize*fileArray.Count()) + headerLength
 
@@ -227,7 +231,7 @@ func (fileArray *FileArray) shrinkFileSizeToDataSize(itemSize serialization.Leng
 //
 // Returns:
 //   - error: An error if the operation fails.
-func (fileArray *FileArray) hasSpace(dataSize uint64) bool {
+func (fileArray *FileArray[T]) hasSpace(dataSize uint64) bool {
 	return uint64(len(fileArray.getDataSlice())) > (dataSize)
 }
 
@@ -235,7 +239,7 @@ func (fileArray *FileArray) hasSpace(dataSize uint64) bool {
 //
 // Returns:
 //   - error: An error if unmap or file close operations fail.
-func (fileArray *FileArray) Close() error {
+func (fileArray *FileArray[T]) Close() error {
 	var err error
 
 	if fileArray.memoryMap != nil {
@@ -250,6 +254,6 @@ func (fileArray *FileArray) Close() error {
 }
 
 // GetFileName returns the name of the backing file.
-func (fileArray *FileArray) GetFileName() string {
+func (fileArray *FileArray[T]) GetFileName() string {
 	return fileArray.backingFile.Name()
 }

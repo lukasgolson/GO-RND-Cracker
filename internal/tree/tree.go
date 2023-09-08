@@ -7,8 +7,8 @@ import (
 )
 
 type Tree struct {
-	Nodes *fileArray.FileArray
-	Edges *fileArray.FileArray
+	Nodes *fileArray.FileArray[Node]
+	Edges *fileArray.FileArray[Edge]
 
 	closing bool
 }
@@ -21,8 +21,8 @@ func NewTree(filename string) (*Tree, error) {
 
 	var err error
 
-	bkTree.Nodes, err = fileArray.NewFileArray(Node{}, nodesFilename)
-	bkTree.Edges, err = fileArray.NewFileArray(Edge{}, edgesFilename)
+	bkTree.Nodes, err = fileArray.NewFileArray[Node](nodesFilename)
+	bkTree.Edges, err = fileArray.NewFileArray[Edge](edgesFilename)
 
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func (tree *Tree) addNode(data [32]byte, seed int32) (serialization.Offset, erro
 
 	id := tree.Nodes.Count()
 
-	_, err := fileArray.Append[Node](tree.Nodes, *NewNode(id, data, seed))
+	_, err := tree.Nodes.Append(*NewNode(id, data, seed))
 
 	if err != nil {
 		return 0, err
@@ -54,16 +54,16 @@ func (tree *Tree) addNode(data [32]byte, seed int32) (serialization.Offset, erro
 
 func (tree *Tree) AddEdge(parentIndex, childIndex serialization.Offset, distance uint32) (serialization.Offset, error) {
 	newEdge := NewEdge(parentIndex, childIndex, distance)
-	id, err := fileArray.Append(tree.Edges, *newEdge)
+	id, err := tree.Edges.Append(*newEdge)
 	return id, err
 }
 
 func (tree *Tree) getNodeByIndex(index serialization.Offset) (Node, error) {
-	return fileArray.GetItemFromIndex[Node](tree.Nodes, index)
+	return tree.Nodes.GetItemFromIndex(index)
 }
 
 func (tree *Tree) getEdgeByIndex(index serialization.Offset) (Edge, error) {
-	return fileArray.GetItemFromIndex[Edge](tree.Edges, index)
+	return tree.Edges.GetItemFromIndex(index)
 }
 
 func (tree *Tree) Close() error {
