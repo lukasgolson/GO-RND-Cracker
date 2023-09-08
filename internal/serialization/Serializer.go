@@ -1,10 +1,12 @@
 package serialization
 
-import "io"
+import (
+	"io"
+)
 
 type Serializer[T any] interface {
 	SerializeToBinaryStream(writer io.Writer) error
 	DeserializeFromBinaryStream(reader io.Reader) (T, error)
-	StrideLength() uint64
+	StrideLength() Length
 	IDByte() byte
 }

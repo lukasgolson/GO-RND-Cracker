@@ -2,11 +2,12 @@ package tree
 
 import (
 	"awesomeProject/internal/algorithms"
+	"awesomeProject/internal/serialization"
 	"awesomeProject/internal/util"
 	"math"
 )
 
-func (tree *Tree) AddToBKTree(rootIndex uint32, word [NodeWordSize]byte, seed int32) error {
+func (tree *Tree) AddToBKTree(rootIndex serialization.Offset, word [NodeWordSize]byte, seed int32) error {
 	// Step 1: Check if the tree is empty, if so, create a root node.
 	if tree.isEmpty() {
 
@@ -51,15 +52,15 @@ func (tree *Tree) AddToBKTree(rootIndex uint32, word [NodeWordSize]byte, seed in
 	}
 }
 
-func (tree *Tree) FindClosestElement(rootIndex uint32, word [NodeWordSize]byte, maxDistance uint32) (*Node, uint32) {
+func (tree *Tree) FindClosestElement(rootIndex serialization.Offset, word [NodeWordSize]byte, maxDistance uint32) (*Node, uint32) {
 	if tree.Nodes.Count() == 0 {
 		return nil, math.MaxUint32
 	}
 
-	S := make([]uint32, 0)      // Set of nodes to process
-	S = append(S, rootIndex)    // Insert the root node into S
-	bestWord := Node{}          // Best matching element
-	bestDistance := maxDistance // Best matching distance, initialized to maxDistance
+	S := make([]serialization.Offset, 0) // Set of nodes to process
+	S = append(S, rootIndex)             // Insert the root node into S
+	bestWord := Node{}                   // Best matching element
+	bestDistance := maxDistance          // Best matching distance, initialized to maxDistance
 
 	for len(S) != 0 {
 		u := S[len(S)-1] // Pop the last node from S

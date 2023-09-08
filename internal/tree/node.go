@@ -1,6 +1,7 @@
 package tree
 
 import (
+	"awesomeProject/internal/serialization"
 	"encoding/binary"
 	"io"
 )
@@ -8,12 +9,12 @@ import (
 const NodeWordSize = 32
 
 type Node struct {
-	ID   uint32
+	ID   serialization.Offset
 	Word [NodeWordSize]byte
 	Seed int32
 }
 
-func NewNode(ID uint32, word [NodeWordSize]byte, seed int32) *Node {
+func NewNode(ID serialization.Offset, word [NodeWordSize]byte, seed int32) *Node {
 	return &Node{
 		ID:   ID,
 		Word: word,
@@ -41,7 +42,7 @@ func (n Node) SerializeToBinaryStream(writer io.Writer) error {
 }
 
 func (n Node) DeserializeFromBinaryStream(reader io.Reader) (Node, error) {
-	var ID uint32
+	var ID serialization.Offset
 	err := binary.Read(reader, binary.LittleEndian, &ID)
 	if err != nil {
 		return n, err
@@ -66,8 +67,8 @@ func (n Node) DeserializeFromBinaryStream(reader io.Reader) (Node, error) {
 	return n, nil
 }
 
-func (n Node) StrideLength() uint64 {
-	return uint64(binary.Size(n.ID) + len(n.Word) + binary.Size(n.Seed))
+func (n Node) StrideLength() serialization.Length {
+	return serialization.Length(binary.Size(n.ID) + len(n.Word) + binary.Size(n.Seed))
 }
 
 func (n Node) IDByte() byte {

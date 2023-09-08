@@ -15,7 +15,7 @@ import (
 //
 // Returns:
 //   - An error if the operation fails, nil otherwise.
-func Append[T serialization.Serializer[T]](fileArray *FileArray, item T) (uint64, error) {
+func Append[T serialization.Serializer[T]](fileArray *FileArray, item T) (serialization.Offset, error) {
 
 	id := fileArray.Count()
 	err := SetItemAtIndex[T](fileArray, item, id)
@@ -36,7 +36,7 @@ func Append[T serialization.Serializer[T]](fileArray *FileArray, item T) (uint64
 //
 // Returns:
 //   - An error if the operation fails, nil otherwise.
-func SetItemAtIndex[T serialization.Serializer[T]](fileArray *FileArray, item T, index uint64) error {
+func SetItemAtIndex[T serialization.Serializer[T]](fileArray *FileArray, item T, index serialization.Offset) error {
 	serializationSize := (item).StrideLength()
 
 	if index > fileArray.Count() {
@@ -54,7 +54,7 @@ func SetItemAtIndex[T serialization.Serializer[T]](fileArray *FileArray, item T,
 	arraySize := serializationSize * (index + 1)
 
 	stallCounter := 0
-	for !fileArray.hasSpace(arraySize) {
+	for !fileArray.hasSpace(uint64(arraySize)) {
 		stallCounter++
 		err := fileArray.multiplyMemoryMapSize(2)
 		if err != nil {
@@ -89,7 +89,7 @@ func SetItemAtIndex[T serialization.Serializer[T]](fileArray *FileArray, item T,
 // Returns:
 //   - The item of type T at the specified index.
 //   - An error if the operation fails, nil otherwise.
-func GetItemFromIndex[T serialization.Serializer[T]](fileArray *FileArray, index uint64) (T, error) {
+func GetItemFromIndex[T serialization.Serializer[T]](fileArray *FileArray, index serialization.Offset) (T, error) {
 	var err error
 	var item T
 
@@ -97,14 +97,13 @@ func GetItemFromIndex[T serialization.Serializer[T]](fileArray *FileArray, index
 		return item, fmt.Errorf("index out of bounds")
 	}
 
-	var buffer bytes.Buffer
-
 	serializedSize := item.StrideLength()
 
 	memoryLocation := index * serializedSize
 
 	slice := fileArray.getDataSlice()
 
+	var buffer bytes.Buffer
 	serializedItem := make([]byte, serializedSize)
 	copy(serializedItem, slice[memoryLocation:memoryLocation+serializedSize])
 	buffer.Write(serializedItem)
