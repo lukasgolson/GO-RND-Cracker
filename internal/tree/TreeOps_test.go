@@ -116,11 +116,12 @@ func TestFuzzyMatch(t *testing.T) {
 }
 
 func cleanup(tree *Tree) {
-	file1, file2 := tree.getFileNames()
+	file1, file2, file3 := tree.getFileNames()
 
 	tree.Close()
 
 	os.Remove(file1)
 
 	os.Remove(file2)
+	os.Remove(file3)
 }

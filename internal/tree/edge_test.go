@@ -8,9 +8,8 @@ import (
 
 func TestEdgeSerializeDeserialize(t *testing.T) {
 	edge := Edge{
-		ParentIndex: 42,
-		ChildIndex:  43,
-		Distance:    12,
+		ChildIndex: 43,
+		Distance:   12,
 	}
 
 	var buffer bytes.Buffer
@@ -26,10 +25,6 @@ func TestEdgeSerializeDeserialize(t *testing.T) {
 		t.Fatalf("Failed to deserialize edge: %v", err)
 	}
 
-	if edge2.ParentIndex != edge.ParentIndex {
-		t.Fatalf("ParentIndex did not match. Got %d, expected %d", edge2.ParentIndex, edge.ParentIndex)
-	}
-
 	if edge2.ChildIndex != edge.ChildIndex {
 		t.Fatalf("ChildIndex did not match. Got %d, expected %d", edge2.ChildIndex, edge.ChildIndex)
 	}
@@ -42,9 +37,8 @@ func TestEdgeSerializeDeserialize(t *testing.T) {
 
 func TestEdgeSerializedSize(t *testing.T) {
 	edge := Edge{
-		ParentIndex: 42,
-		ChildIndex:  43,
-		Distance:    12,
+		ChildIndex: 43,
+		Distance:   12,
 	}
 
 	size := edge.StrideLength()
@@ -62,10 +56,6 @@ func TestEdgeSerializedSize(t *testing.T) {
 
 func TestNewEdge(t *testing.T) {
 	edge := NewEdge(42, 43, 12)
-
-	if edge.ParentIndex != 42 {
-		t.Fatalf("ParentIndex did not match. Got %d, expected %d", edge.ParentIndex, 42)
-	}
 
 	if edge.ChildIndex != 43 {
 		t.Fatalf("ChildIndex did not match. Got %d, expected %d", edge.ChildIndex, 43)

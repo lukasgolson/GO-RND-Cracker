@@ -6,16 +6,16 @@ import (
 	"io"
 )
 
-type LinkedListNode[T serialization.Serializer[T]] struct {
+type linkedListNode[T serialization.Serializer[T]] struct {
 	NextOffset serialization.Offset
 	Item       T
 }
 
-func NewLinkedListNode[T serialization.Serializer[T]](nextOffset serialization.Offset, item T) LinkedListNode[T] {
-	return LinkedListNode[T]{NextOffset: nextOffset, Item: item}
+func newLinkedListNode[T serialization.Serializer[T]](nextOffset serialization.Offset, item T) linkedListNode[T] {
+	return linkedListNode[T]{NextOffset: nextOffset, Item: item}
 }
 
-func (l LinkedListNode[T]) SerializeToBinaryStream(writer io.Writer) error {
+func (l linkedListNode[T]) SerializeToBinaryStream(writer io.Writer) error {
 
 	err := binary.Write(writer, binary.LittleEndian, l.NextOffset)
 	if err != nil {
@@ -34,7 +34,7 @@ func (l LinkedListNode[T]) SerializeToBinaryStream(writer io.Writer) error {
 	return nil
 }
 
-func (l LinkedListNode[T]) DeserializeFromBinaryStream(reader io.Reader) (LinkedListNode[T], error) {
+func (l linkedListNode[T]) DeserializeFromBinaryStream(reader io.Reader) (linkedListNode[T], error) {
 
 	var nextOffset serialization.Offset
 	err := binary.Read(reader, binary.LittleEndian, &nextOffset)
@@ -48,17 +48,17 @@ func (l LinkedListNode[T]) DeserializeFromBinaryStream(reader io.Reader) (Linked
 		return l, err
 	}
 
-	return LinkedListNode[T]{
+	return linkedListNode[T]{
 		NextOffset: nextOffset,
 		Item:       item,
 	}, nil
 }
 
-func (l LinkedListNode[T]) StrideLength() serialization.Length {
+func (l linkedListNode[T]) StrideLength() serialization.Length {
 
 	return serialization.Length(binary.Size(l.NextOffset)) + l.Item.StrideLength()
 }
 
-func (l LinkedListNode[T]) IDByte() byte {
+func (l linkedListNode[T]) IDByte() byte {
 	return 'L' + 'L' + 'N'
 }
