@@ -9,7 +9,7 @@ import (
 func TestAddToBKTree_EmptyTree(t *testing.T) {
 	// Create a test instance of the BKTree
 	tmpFile, _ := os.CreateTemp("", "test-file")
-	tree, err := NewTree(tmpFile.Name())
+	tree, err := New(tmpFile.Name())
 	if err != nil {
 		t.Fatalf("Error creating tree: %v", err)
 	}
@@ -19,7 +19,7 @@ func TestAddToBKTree_EmptyTree(t *testing.T) {
 
 	word1 := [NodeWordSize]byte{'c', 'a', 't'}
 	seed1 := int32(42)
-	err = tree.AddToBKTree(0, word1, seed1)
+	err = tree.Add(word1, seed1)
 	if err != nil {
 		t.Errorf("Expected no error when adding to an empty tree, but got: %v", err)
 	}
@@ -27,7 +27,7 @@ func TestAddToBKTree_EmptyTree(t *testing.T) {
 
 func TestAddToBKTree_AddingDuplicate(t *testing.T) {
 	tmpFile, _ := os.CreateTemp("", "test-file")
-	tree, err := NewTree(tmpFile.Name())
+	tree, err := New(tmpFile.Name())
 
 	if err != nil {
 		t.Fatalf("Error creating tree: %v", err)
@@ -37,12 +37,12 @@ func TestAddToBKTree_AddingDuplicate(t *testing.T) {
 
 	word1 := [NodeWordSize]byte{'c', 'a', 't'}
 	seed1 := int32(42)
-	err = tree.AddToBKTree(0, word1, seed1)
+	err = tree.Add(word1, seed1)
 	if err != nil {
 		t.Errorf("Expected no error when adding to an empty tree, but got: %v", err)
 	}
 
-	err = tree.AddToBKTree(0, word1, seed1)
+	err = tree.Add(word1, seed1)
 	if err != nil {
 		t.Errorf("Expected no error when adding to an empty tree, but got: %v", err)
 	}
@@ -52,7 +52,7 @@ func TestAddToBKTree_AddingDuplicate(t *testing.T) {
 func TestAddToBKTree_AddingToNonEmptyTree(t *testing.T) {
 
 	tmpFile, _ := os.CreateTemp("", "test-file")
-	tree, err := NewTree(tmpFile.Name())
+	tree, err := New(tmpFile.Name())
 
 	if err != nil {
 		t.Fatalf("Error creating tree: %v", err)
@@ -68,7 +68,7 @@ func TestAddToBKTree_AddingToNonEmptyTree(t *testing.T) {
 		copy(word[:], wordString)
 
 		seed := i
-		err = tree.AddToBKTree(0, [32]byte(word), int32(seed))
+		err = tree.Add([32]byte(word), int32(seed))
 		if err != nil {
 			t.Errorf("Expected no error when adding to a non-empty tree, but got: %v", err)
 		}
@@ -76,7 +76,7 @@ func TestAddToBKTree_AddingToNonEmptyTree(t *testing.T) {
 }
 
 func TestFuzzyMatch(t *testing.T) {
-	tree, err := NewTree("Test")
+	tree, err := New("Test")
 	if err != nil {
 		t.Fatalf("Error creating tree: %v", err)
 	}
@@ -89,7 +89,7 @@ func TestFuzzyMatch(t *testing.T) {
 		copy(word[:], wordString)
 
 		seed := i
-		err = tree.AddToBKTree(0, [32]byte(word), int32(seed))
+		err = tree.Add([32]byte(word), int32(seed))
 		if err != nil {
 			t.Errorf("Expected no error when adding to a non-empty tree, but got: %v", err)
 		}

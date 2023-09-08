@@ -14,11 +14,11 @@ type Tree struct {
 	closing bool
 }
 
-func NewTree(filename string) (*Tree, error) {
+func New(filename string) (*Tree, error) {
 	bkTree := &Tree{}
 
 	nodesFilename := fmt.Sprintf("%s.nodes.bin", filename)
-	edgesFilename := fmt.Sprintf("%s.edges.bin", filename)
+	edgesFilename := fmt.Sprintf("%s.edges", filename)
 
 	var err error
 
@@ -56,7 +56,7 @@ func (tree *Tree) addNode(data [32]byte, seed int32) (serialization.Offset, erro
 	return id, nil
 }
 
-func (tree *Tree) AddEdge(parentIndex, childIndex serialization.Offset, distance uint32) error {
+func (tree *Tree) addEdge(parentIndex, childIndex serialization.Offset, distance uint32) error {
 	newEdge := NewEdge(parentIndex, childIndex, distance)
 
 	err := tree.Edges.Add(parentIndex, *newEdge)

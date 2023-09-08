@@ -6,7 +6,7 @@ import (
 )
 
 func TestNewTree(t *testing.T) {
-	tree, err := NewTree("test")
+	tree, err := New("test")
 	if err != nil {
 		t.Fatalf("Error creating tree: %v", err)
 	}
@@ -27,7 +27,7 @@ func TestNewTree(t *testing.T) {
 }
 
 func TestTreeIsEmpty(t *testing.T) {
-	tree, err := NewTree("test")
+	tree, err := New("test")
 
 	if err != nil {
 		t.Fatalf("Error creating tree: %v", err)
@@ -61,7 +61,7 @@ func TestTreeIsEmpty(t *testing.T) {
 }
 
 func TestTreeAddNode(t *testing.T) {
-	tree, err := NewTree("test")
+	tree, err := New("test")
 
 	if err != nil {
 		t.Fatalf("Error creating tree: %v", err)
@@ -92,7 +92,7 @@ func TestTreeAddNode(t *testing.T) {
 }
 
 func TestTreeAddEdge(t *testing.T) {
-	tree, err := NewTree("test")
+	tree, err := New("test")
 
 	if err != nil {
 		t.Fatalf("Error creating tree: %v", err)
@@ -119,7 +119,7 @@ func TestTreeAddEdge(t *testing.T) {
 		}
 	}()
 
-	err = tree.AddEdge(0, 1, 0)
+	err = tree.addEdge(0, 1, 0)
 	if err != nil {
 		t.Fatalf("Error adding edge: %v", err)
 	}

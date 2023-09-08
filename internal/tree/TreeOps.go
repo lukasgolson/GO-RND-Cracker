@@ -7,7 +7,7 @@ import (
 	"math"
 )
 
-func (tree *Tree) AddToBKTree(rootIndex serialization.Offset, word [NodeWordSize]byte, seed int32) error {
+func (tree *Tree) Add(word [NodeWordSize]byte, seed int32) error {
 	// Step 1: Check if the tree is empty, if so, create a root node.
 	if tree.isEmpty() {
 
@@ -18,7 +18,7 @@ func (tree *Tree) AddToBKTree(rootIndex serialization.Offset, word [NodeWordSize
 		return nil
 	}
 
-	currentNodeIndex := rootIndex
+	currentNodeIndex := serialization.Offset(0)
 
 	for {
 		currentNode, err := tree.getNodeByIndex(currentNodeIndex)
@@ -41,7 +41,7 @@ func (tree *Tree) AddToBKTree(rootIndex serialization.Offset, word [NodeWordSize
 				return err
 			}
 
-			if err := tree.AddEdge(currentNodeIndex, id, editDistance); err != nil {
+			if err := tree.addEdge(currentNodeIndex, id, editDistance); err != nil {
 				return err
 			}
 
