@@ -8,13 +8,13 @@ import (
 )
 
 func TestIndexSerialization(t *testing.T) {
-	// Create a sample Index
+	// Create a sample indexEntry
 	itemID := serialization.Offset(1)
 	offset := serialization.Offset(2)
 	length := serialization.Length(3)
-	index := NewIndex(itemID, offset, length)
+	index := newIndexEntry(itemID, offset, length)
 
-	// Serialize the Index
+	// Serialize the indexEntry
 	var buffer bytes.Buffer
 	err := index.SerializeToBinaryStream(&buffer)
 	if err != nil {
@@ -27,20 +27,20 @@ func TestIndexSerialization(t *testing.T) {
 		t.Fatalf("Deserialization failed: %v", err)
 	}
 
-	// Compare the original Index with the deserialized Index
+	// Compare the original indexEntry with the deserialized indexEntry
 	if index != deserializedIndex {
 		t.Errorf("Expected %v, got %v", index, deserializedIndex)
 	}
 }
 
 func TestIndexDeserializationErrors(t *testing.T) {
-	// Create a sample byte slice with incomplete data for Index
+	// Create a sample byte slice with incomplete data for indexEntry
 	invalidData := []byte{1, 2} // Incomplete data, missing the 'length' field
 
 	// Attempt to deserialize the invalid data
 	var buffer bytes.Buffer
 	buffer.Write(invalidData)
-	_, err := Index{}.DeserializeFromBinaryStream(&buffer)
+	_, err := indexEntry{}.DeserializeFromBinaryStream(&buffer)
 
 	// Check if deserialization returned an error (as expected)
 	if err == nil {
@@ -49,16 +49,16 @@ func TestIndexDeserializationErrors(t *testing.T) {
 }
 
 func TestIndexStrideLength(t *testing.T) {
-	// Create a sample Index
+	// Create a sample indexEntry
 	itemID := serialization.Offset(1)
 	offset := serialization.Offset(2)
 	length := serialization.Length(3)
-	index := NewIndex(itemID, offset, length)
+	index := newIndexEntry(itemID, offset, length)
 
 	// Calculate the expected stride length manually
 	expectedStride := serialization.Length(binary.Size(itemID) + binary.Size(offset) + binary.Size(length))
 
-	// Get the stride length from the Index
+	// Get the stride length from the indexEntry
 	stride := index.StrideLength()
 
 	// Compare the calculated stride with the expected stride

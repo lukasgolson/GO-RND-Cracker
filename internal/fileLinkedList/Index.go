@@ -6,17 +6,17 @@ import (
 	"io"
 )
 
-type Index struct {
+type indexEntry struct {
 	itemID serialization.Offset
 	offset serialization.Offset
 	length serialization.Length
 }
 
-func NewIndex(itemID serialization.Offset, offset serialization.Offset, length serialization.Length) Index {
-	return Index{itemID: itemID, offset: offset, length: length}
+func newIndexEntry(itemID serialization.Offset, offset serialization.Offset, length serialization.Length) indexEntry {
+	return indexEntry{itemID: itemID, offset: offset, length: length}
 }
 
-func (i Index) SerializeToBinaryStream(writer io.Writer) error {
+func (i indexEntry) SerializeToBinaryStream(writer io.Writer) error {
 	err := binary.Write(writer, binary.LittleEndian, i.itemID)
 
 	if err != nil {
@@ -38,7 +38,7 @@ func (i Index) SerializeToBinaryStream(writer io.Writer) error {
 	return nil
 }
 
-func (i Index) DeserializeFromBinaryStream(reader io.Reader) (Index, error) {
+func (i indexEntry) DeserializeFromBinaryStream(reader io.Reader) (indexEntry, error) {
 
 	err := binary.Read(reader, binary.LittleEndian, &i.itemID)
 
@@ -61,10 +61,10 @@ func (i Index) DeserializeFromBinaryStream(reader io.Reader) (Index, error) {
 	return i, nil
 }
 
-func (i Index) StrideLength() serialization.Length {
+func (i indexEntry) StrideLength() serialization.Length {
 	return serialization.Length(binary.Size(i.itemID) + binary.Size(i.offset) + binary.Size(i.length))
 }
 
-func (i Index) IDByte() byte {
+func (i indexEntry) IDByte() byte {
 	return 'I'
 }

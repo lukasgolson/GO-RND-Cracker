@@ -15,7 +15,7 @@ func TestNewTree(t *testing.T) {
 		t.Fatalf("Tree is nil")
 	}
 
-	file1, file2 := tree.getFileNames()
+	file1, file2, file3 := tree.getFileNames()
 
 	if err := tree.Close(); err != nil {
 		t.Fatalf("Error closing tree: %v", err)
@@ -23,6 +23,7 @@ func TestNewTree(t *testing.T) {
 
 	os.Remove(file1)
 	os.Remove(file2)
+	os.Remove(file3)
 }
 
 func TestTreeIsEmpty(t *testing.T) {
@@ -34,7 +35,7 @@ func TestTreeIsEmpty(t *testing.T) {
 
 	// Use defer to schedule the file removal functions
 	defer func() {
-		file1, file2 := tree.getFileNames()
+		file1, file2, file3 := tree.getFileNames()
 
 		if err := tree.Close(); err != nil {
 			t.Fatalf("Error closing tree: %v", err)
@@ -45,6 +46,10 @@ func TestTreeIsEmpty(t *testing.T) {
 		}
 
 		if err := os.Remove(file2); err != nil {
+			t.Fatalf("Error deleting file2: %v", err)
+		}
+
+		if err := os.Remove(file3); err != nil {
 			t.Fatalf("Error deleting file2: %v", err)
 		}
 	}()
@@ -64,7 +69,7 @@ func TestTreeAddNode(t *testing.T) {
 
 	// Use defer to schedule the file removal functions
 	defer func() {
-		file1, file2 := tree.getFileNames()
+		file1, file2, file3 := tree.getFileNames()
 
 		if err := tree.Close(); err != nil {
 			t.Fatalf("Error closing tree: %v", err)
@@ -75,6 +80,10 @@ func TestTreeAddNode(t *testing.T) {
 		}
 
 		if err := os.Remove(file2); err != nil {
+			t.Fatalf("Error deleting file2: %v", err)
+		}
+
+		if err := os.Remove(file3); err != nil {
 			t.Fatalf("Error deleting file2: %v", err)
 		}
 	}()
@@ -91,7 +100,7 @@ func TestTreeAddEdge(t *testing.T) {
 
 	// Use defer to schedule the file removal functions
 	defer func() {
-		file1, file2 := tree.getFileNames()
+		file1, file2, file3 := tree.getFileNames()
 
 		if err := tree.Close(); err != nil {
 			t.Fatalf("Error closing tree: %v", err)
@@ -104,9 +113,13 @@ func TestTreeAddEdge(t *testing.T) {
 		if err := os.Remove(file2); err != nil {
 			t.Fatalf("Error deleting file2: %v", err)
 		}
+
+		if err := os.Remove(file3); err != nil {
+			t.Fatalf("Error deleting file2: %v", err)
+		}
 	}()
 
-	_, err = tree.AddEdge(0, 1, 0)
+	err = tree.AddEdge(0, 1, 0)
 	if err != nil {
 		t.Fatalf("Error adding edge: %v", err)
 	}

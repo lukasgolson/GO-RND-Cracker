@@ -8,40 +8,41 @@ func (tree *Tree) getNextNodeID() uint32 {
 	return uint32(tree.Nodes.Count())
 }
 
-func (tree *Tree) findChildNodeWithDistance(parentIndex serialization.Offset, distance uint32) (serialization.Offset, bool) {
-	for i := serialization.Offset(0); i < tree.Edges.Count(); i++ {
-		edge, err := tree.getEdgeByIndex(i)
-		if err != nil {
-			continue
-		}
+func (tree *Tree) findChildNodeWithDistance(parentNodeID serialization.Offset, distance uint32) (serialization.Offset, bool) {
 
-		if edge.ParentIndex == parentIndex && edge.Distance == distance {
-			return edge.ChildIndex, true
+	egressArcs := tree.getEgressArcs(parentNodeID)
+
+	for i, arc := range egressArcs {
+		if arc.Distance == distance {
+			return egressArcs[i].ChildIndex, true
 		}
 	}
 
 	return 0, false
 }
 
-func (tree *Tree) getEgressArcs(u serialization.Offset) []Edge {
+func (tree *Tree) getEgressArcs(parentNodeID serialization.Offset) []Edge {
 	// Create a slice to store egress arcs
 	egressArcs := make([]Edge, 0)
 
-	// Iterate through the edges in the tree
-	for i := serialization.Offset(0); i < tree.Edges.Count(); i++ {
+	valid, count, err := tree.Edges.Count(parentNodeID)
 
-		edge, err := tree.getEdgeByIndex(i)
+	if err != nil {
+		return nil
+	}
+
+	if !valid {
+		return egressArcs
+	}
+
+	for i := serialization.Length(0); i < count; i++ {
+		edge, err := tree.Edges.Get(parentNodeID, i)
 		if err != nil {
 			continue
 		}
 
-		// Check if the edge's parent index matches the given node index
-		if edge.ParentIndex == u {
-			// Append the edge to the egressArcs slice
-			egressArcs = append(egressArcs, edge)
-		}
+		egressArcs = append(egressArcs, edge)
 	}
 
-	// Return the egress arcs for the specified node
 	return egressArcs
 }

@@ -41,7 +41,7 @@ func (tree *Tree) AddToBKTree(rootIndex serialization.Offset, word [NodeWordSize
 				return err
 			}
 
-			if _, err := tree.AddEdge(currentNodeIndex, id, editDistance); err != nil {
+			if err := tree.AddEdge(currentNodeIndex, id, editDistance); err != nil {
 				return err
 			}
 
@@ -52,21 +52,21 @@ func (tree *Tree) AddToBKTree(rootIndex serialization.Offset, word [NodeWordSize
 	}
 }
 
-func (tree *Tree) FindClosestElement(rootIndex serialization.Offset, word [NodeWordSize]byte, maxDistance uint32) (*Node, uint32) {
+func (tree *Tree) FindClosestElement(rootId serialization.Offset, word [NodeWordSize]byte, maxDistance uint32) (*Node, uint32) {
 	if tree.Nodes.Count() == 0 {
 		return nil, math.MaxUint32
 	}
 
-	S := make([]serialization.Offset, 0) // Set of nodes to process
-	S = append(S, rootIndex)             // Insert the root node into S
-	bestWord := Node{}                   // Best matching element
-	bestDistance := maxDistance          // Best matching distance, initialized to maxDistance
+	nodes := make([]serialization.Offset, 0) // Set of nodes to process
+	nodes = append(nodes, rootId)            // Insert the root node into nodes
+	bestWord := Node{}                       // Best matching element
+	bestDistance := maxDistance              // Best matching distance, initialized to maxDistance
 
-	for len(S) != 0 {
-		u := S[len(S)-1] // Pop the last node from S
-		S = S[:len(S)-1]
+	for len(nodes) != 0 {
+		nodeID := nodes[len(nodes)-1] // Pop the last node from nodes
+		nodes = nodes[:len(nodes)-1]
 
-		n, err := tree.getNodeByIndex(u)
+		n, err := tree.getNodeByIndex(nodeID)
 
 		if err != nil {
 			return nil, math.MaxUint32
@@ -76,16 +76,16 @@ func (tree *Tree) FindClosestElement(rootIndex serialization.Offset, word [NodeW
 
 		if dU < bestDistance {
 
-			bestWord, err = tree.getNodeByIndex(u)
+			bestWord, err = tree.getNodeByIndex(nodeID)
 			bestDistance = dU
 		}
 
-		for _, edge := range tree.getEgressArcs(u) {
+		for _, edge := range tree.getEgressArcs(nodeID) {
 			v := edge.ChildIndex
 			dUV := uint32(util.Abs(int32(edge.Distance) - int32(dU)))
 
 			if dUV < bestDistance {
-				S = append(S, v) // Insert v into S
+				nodes = append(nodes, v) // Insert v into nodes
 			}
 		}
 	}

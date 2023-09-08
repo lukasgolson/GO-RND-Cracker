@@ -2,13 +2,14 @@ package tree
 
 import (
 	"awesomeProject/internal/fileArray"
+	"awesomeProject/internal/fileLinkedList"
 	"awesomeProject/internal/serialization"
 	"fmt"
 )
 
 type Tree struct {
 	Nodes *fileArray.FileArray[Node]
-	Edges *fileArray.FileArray[Edge]
+	Edges *fileLinkedList.FileLinkedList[Edge]
 
 	closing bool
 }
@@ -22,7 +23,7 @@ func NewTree(filename string) (*Tree, error) {
 	var err error
 
 	bkTree.Nodes, err = fileArray.NewFileArray[Node](nodesFilename)
-	bkTree.Edges, err = fileArray.NewFileArray[Edge](edgesFilename)
+	bkTree.Edges, err = fileLinkedList.NewFileLinkedList[Edge](edgesFilename)
 
 	if err != nil {
 		return nil, err
@@ -31,8 +32,11 @@ func NewTree(filename string) (*Tree, error) {
 	return bkTree, nil
 }
 
-func (tree *Tree) getFileNames() (string, string) {
-	return tree.Nodes.GetFileName(), tree.Edges.GetFileName()
+func (tree *Tree) getFileNames() (string, string, string) {
+
+	file1, file2 := tree.Edges.GetFileName()
+
+	return file1, file2, tree.Nodes.GetFileName()
 }
 
 func (tree *Tree) isEmpty() bool {
@@ -52,18 +56,19 @@ func (tree *Tree) addNode(data [32]byte, seed int32) (serialization.Offset, erro
 	return id, nil
 }
 
-func (tree *Tree) AddEdge(parentIndex, childIndex serialization.Offset, distance uint32) (serialization.Offset, error) {
+func (tree *Tree) AddEdge(parentIndex, childIndex serialization.Offset, distance uint32) error {
 	newEdge := NewEdge(parentIndex, childIndex, distance)
-	id, err := tree.Edges.Append(*newEdge)
-	return id, err
+
+	err := tree.Edges.Add(parentIndex, *newEdge)
+	if err != nil {
+		return err
+	}
+
+	return err
 }
 
 func (tree *Tree) getNodeByIndex(index serialization.Offset) (Node, error) {
 	return tree.Nodes.GetItemFromIndex(index)
-}
-
-func (tree *Tree) getEdgeByIndex(index serialization.Offset) (Edge, error) {
-	return tree.Edges.GetItemFromIndex(index)
 }
 
 func (tree *Tree) Close() error {
