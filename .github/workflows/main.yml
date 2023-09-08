@@ -1,0 +1,43 @@
+name: Go test coverage check and PR
+
+on:
+  pull_request:
+    branches: [ '**' ]
+
+jobs:
+  full_ci:
+    strategy:
+      matrix:
+        go_version: [ 1.21.x ]
+
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go_version }}
+
+      - name: Run tests
+        run: |
+          go test ./... -coverprofile=./cover.out
+          go test -json ./... > test.json
+
+      - name: Annotate tests
+        if: always()
+        uses: guyarb/golang-test-annotations@v0.5.1
+        with:
+          test-results: test.json
+
+      - name: Check test coverage
+        uses: vladopajic/go-test-coverage@v2
+        with:
+          # Configure action by specifying input parameters individually (option 2)
+          profile: cover.out
+          local-prefix: github.com/lukasgolson/awesomeProject
+          threshold-file: 80
+          threshold-package: 80
+          threshold-total: 95
