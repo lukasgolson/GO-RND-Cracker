@@ -329,3 +329,17 @@ func (list *FileLinkedList[T]) Close() error {
 
 	return nil
 }
+
+func (list *FileLinkedList[T]) ShrinkWrap() error {
+
+	err := list.elementsArray.ShrinkWrap()
+	if err != nil {
+		return err
+	}
+	err = list.indexArray.ShrinkWrap()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

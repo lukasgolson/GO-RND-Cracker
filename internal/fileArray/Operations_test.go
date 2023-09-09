@@ -277,7 +277,7 @@ func TestShrinkwrapFile(t *testing.T) {
 	}
 	expandedSize := fi.Size()
 
-	err = fileArray.ShrinkWrapFileArray()
+	err = fileArray.ShrinkWrap()
 
 	if err != nil {
 		t.Fatalf("Failed to shrinkwrap file: %v", err)
@@ -287,15 +287,15 @@ func TestShrinkwrapFile(t *testing.T) {
 	shrunkSize := fi.Size()
 
 	if shrunkSize == expandedSize {
-		t.Fatalf("ShrinkWrapFileArray did not shrink the file. Expanded size: %d, Shrunk size: %d", expandedSize, shrunkSize)
+		t.Fatalf("ShrinkWrap did not shrink the file. Expanded size: %d, Shrunk size: %d", expandedSize, shrunkSize)
 	}
 
 	expectedSize := serialization.Length(initialSize) + (num.StrideLength())
 
 	if serialization.Length(shrunkSize) < expectedSize {
-		t.Fatalf("ShrinkWrapFileArray shrunk the file smaller than possible. Min size: %d, Shrunk size: %d", expectedSize, shrunkSize)
+		t.Fatalf("ShrinkWrap shrunk the file smaller than possible. Min size: %d, Shrunk size: %d", expectedSize, shrunkSize)
 	}
 
-	println("ShrinkWrapFileArray succeeded. Initial size:", initialSize, "Expanded size:", expandedSize, "Shrunk size:", shrunkSize)
+	println("ShrinkWrap succeeded. Initial size:", initialSize, "Expanded size:", expandedSize, "Shrunk size:", shrunkSize)
 
 }

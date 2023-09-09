@@ -6,19 +6,19 @@ import (
 	"io"
 )
 
-type Edge struct {
+type edge struct {
 	ChildIndex serialization.Offset
 	Distance   uint32
 }
 
-func NewEdge(parentIndex serialization.Offset, childIndex serialization.Offset, distance uint32) *Edge {
-	return &Edge{
+func NewEdge(parentIndex serialization.Offset, childIndex serialization.Offset, distance uint32) *edge {
+	return &edge{
 		ChildIndex: childIndex,
 		Distance:   distance,
 	}
 }
 
-func (e Edge) SerializeToBinaryStream(writer io.Writer) error {
+func (e edge) SerializeToBinaryStream(writer io.Writer) error {
 
 	err := binary.Write(writer, binary.LittleEndian, e.ChildIndex)
 	if err != nil {
@@ -33,7 +33,7 @@ func (e Edge) SerializeToBinaryStream(writer io.Writer) error {
 	return nil
 }
 
-func (e Edge) DeserializeFromBinaryStream(reader io.Reader) (Edge, error) {
+func (e edge) DeserializeFromBinaryStream(reader io.Reader) (edge, error) {
 
 	var childIndex serialization.Offset
 	err := binary.Read(reader, binary.LittleEndian, &childIndex)
@@ -53,10 +53,10 @@ func (e Edge) DeserializeFromBinaryStream(reader io.Reader) (Edge, error) {
 	return e, nil
 }
 
-func (e Edge) StrideLength() serialization.Length {
+func (e edge) StrideLength() serialization.Length {
 	return serialization.Length(binary.Size(e.ChildIndex) + binary.Size(e.Distance))
 }
 
-func (e Edge) IDByte() byte {
+func (e edge) IDByte() byte {
 	return 'E'
 }

@@ -8,21 +8,21 @@ import (
 
 const NodeWordSize = 32
 
-type Node struct {
+type node struct {
 	ID   serialization.Offset
 	Word [NodeWordSize]byte
 	Seed int32
 }
 
-func NewNode(ID serialization.Offset, word [NodeWordSize]byte, seed int32) *Node {
-	return &Node{
+func NewNode(ID serialization.Offset, word [NodeWordSize]byte, seed int32) *node {
+	return &node{
 		ID:   ID,
 		Word: word,
 		Seed: seed,
 	}
 }
 
-func (n Node) SerializeToBinaryStream(writer io.Writer) error {
+func (n node) SerializeToBinaryStream(writer io.Writer) error {
 	err := binary.Write(writer, binary.LittleEndian, n.ID)
 	if err != nil {
 		return err
@@ -41,7 +41,7 @@ func (n Node) SerializeToBinaryStream(writer io.Writer) error {
 	return nil
 }
 
-func (n Node) DeserializeFromBinaryStream(reader io.Reader) (Node, error) {
+func (n node) DeserializeFromBinaryStream(reader io.Reader) (node, error) {
 	var ID serialization.Offset
 	err := binary.Read(reader, binary.LittleEndian, &ID)
 	if err != nil {
@@ -67,10 +67,10 @@ func (n Node) DeserializeFromBinaryStream(reader io.Reader) (Node, error) {
 	return n, nil
 }
 
-func (n Node) StrideLength() serialization.Length {
+func (n node) StrideLength() serialization.Length {
 	return serialization.Length(binary.Size(n.ID) + len(n.Word) + binary.Size(n.Seed))
 }
 
-func (n Node) IDByte() byte {
+func (n node) IDByte() byte {
 	return 'N'
 }

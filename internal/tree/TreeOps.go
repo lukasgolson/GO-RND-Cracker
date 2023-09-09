@@ -7,7 +7,13 @@ import (
 	"math"
 )
 
-func (tree *Tree) AddToBKTree(rootIndex serialization.Offset, word [NodeWordSize]byte, seed int32) error {
+type SearchResult struct {
+	Word     [NodeWordSize]byte
+	Seed     int32
+	Distance uint32
+}
+
+func (tree *Tree) Add(word [NodeWordSize]byte, seed int32) error {
 	// Step 1: Check if the tree is empty, if so, create a root node.
 	if tree.isEmpty() {
 
@@ -18,7 +24,7 @@ func (tree *Tree) AddToBKTree(rootIndex serialization.Offset, word [NodeWordSize
 		return nil
 	}
 
-	currentNodeIndex := rootIndex
+	currentNodeIndex := serialization.Offset(0)
 
 	for {
 		currentNode, err := tree.getNodeByIndex(currentNodeIndex)
@@ -41,7 +47,7 @@ func (tree *Tree) AddToBKTree(rootIndex serialization.Offset, word [NodeWordSize
 				return err
 			}
 
-			if err := tree.AddEdge(currentNodeIndex, id, editDistance); err != nil {
+			if err := tree.addEdge(currentNodeIndex, id, editDistance); err != nil {
 				return err
 			}
 
@@ -52,14 +58,14 @@ func (tree *Tree) AddToBKTree(rootIndex serialization.Offset, word [NodeWordSize
 	}
 }
 
-func (tree *Tree) FindClosestElement(rootId serialization.Offset, word [NodeWordSize]byte, maxDistance uint32) (*Node, uint32) {
-	if tree.Nodes.Count() == 0 {
-		return nil, math.MaxUint32
+func (tree *Tree) FindClosestElement(word [NodeWordSize]byte, maxDistance uint32) SearchResult {
+	if tree.nodes.Count() == 0 {
+		return SearchResult{[NodeWordSize]byte{}, 0, math.MaxUint32}
 	}
 
 	nodes := make([]serialization.Offset, 0) // Set of nodes to process
-	nodes = append(nodes, rootId)            // Insert the root node into nodes
-	bestWord := Node{}                       // Best matching element
+	nodes = append(nodes, 0)                 // Insert the root node into nodes
+	bestWord := node{}                       // Best matching element
 	bestDistance := maxDistance              // Best matching distance, initialized to maxDistance
 
 	for len(nodes) != 0 {
@@ -69,7 +75,7 @@ func (tree *Tree) FindClosestElement(rootId serialization.Offset, word [NodeWord
 		n, err := tree.getNodeByIndex(nodeID)
 
 		if err != nil {
-			return nil, math.MaxUint32
+			return SearchResult{[NodeWordSize]byte{}, 0, math.MaxUint32}
 		}
 
 		dU := algorithms.MeyersDifferenceAlgorithm(n.Word[:], word[:])
@@ -91,8 +97,8 @@ func (tree *Tree) FindClosestElement(rootId serialization.Offset, word [NodeWord
 	}
 
 	if bestDistance == maxDistance {
-		return nil, math.MaxUint32
+		return SearchResult{[NodeWordSize]byte{}, 0, math.MaxUint32}
 	}
 
-	return &bestWord, bestDistance
+	return SearchResult{bestWord.Word, bestWord.Seed, bestDistance}
 }

@@ -5,7 +5,7 @@ import (
 )
 
 func (tree *Tree) getNextNodeID() uint32 {
-	return uint32(tree.Nodes.Count())
+	return uint32(tree.nodes.Count())
 }
 
 func (tree *Tree) findChildNodeWithDistance(parentNodeID serialization.Offset, distance uint32) (serialization.Offset, bool) {
@@ -21,11 +21,11 @@ func (tree *Tree) findChildNodeWithDistance(parentNodeID serialization.Offset, d
 	return 0, false
 }
 
-func (tree *Tree) getEgressArcs(parentNodeID serialization.Offset) []Edge {
+func (tree *Tree) getEgressArcs(parentNodeID serialization.Offset) []edge {
 	// Create a slice to store egress arcs
-	egressArcs := make([]Edge, 0)
+	egressArcs := make([]edge, 0)
 
-	valid, count, err := tree.Edges.Count(parentNodeID)
+	valid, count, err := tree.edges.Count(parentNodeID)
 
 	if err != nil {
 		return nil
@@ -36,7 +36,7 @@ func (tree *Tree) getEgressArcs(parentNodeID serialization.Offset) []Edge {
 	}
 
 	for i := serialization.Length(0); i < count; i++ {
-		edge, err := tree.Edges.Get(parentNodeID, i)
+		edge, err := tree.edges.Get(parentNodeID, i)
 		if err != nil {
 			continue
 		}
