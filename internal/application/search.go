@@ -7,8 +7,10 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type SeedDistance struct {
@@ -16,7 +18,11 @@ type SeedDistance struct {
 	Distance uint32
 }
 
-func Search(inputFile string, delimiter string) error {
+// Search performs a search operation on a set of trees.
+func Search(inputFile string, delimiter string, numCPU int) error {
+	// Save the current GOMAXPROCS value and set it to numCPU.
+	previousMaxProcs := runtime.GOMAXPROCS(numCPU)
+	defer runtime.GOMAXPROCS(previousMaxProcs) // Restore the original GOMAXPROCS value when done.
 
 	trees, err := findNodesFiles("data")
 	if err != nil {
@@ -28,25 +34,29 @@ func Search(inputFile string, delimiter string) error {
 		return err
 	}
 
-	var seedDistances []SeedDistance
+	var wg sync.WaitGroup
+	resultsChan := make(chan []SeedDistance)
 
-	for _, s := range trees {
-		// Define the window size and stride
-		stride := 1
+	// Perform search in parallel for each tree.
+	for _, treePath := range trees {
+		wg.Add(1)
+		go func(path string) {
+			defer wg.Done()
+			results := searchInTree(parsedValues, path)
+			resultsChan <- results
+		}(treePath)
+	}
 
-		// Loop through the byte slice
-		for i := 0; i <= len(parsedValues)-32; i += stride {
-			sequence := parsedValues[i : i+32]
+	// Start a goroutine to collect and print the results.
+	go func() {
+		wg.Wait()
+		close(resultsChan)
+	}()
 
-			found, seed, distance := FindClosestInTree(s, [32]byte(sequence))
-
-			if found {
-				seedDistances = append(seedDistances, SeedDistance{Seed: seed, Distance: distance})
-			}
-
-			//println(FormatByteArrayAsNumbers(sequence, 32))
-
-		}
+	// Collect and print the results from the channel.
+	seedDistances := make([]SeedDistance, 0)
+	for result := range resultsChan {
+		seedDistances = append(seedDistances, result...)
 	}
 
 	// Print the results
@@ -55,9 +65,32 @@ func Search(inputFile string, delimiter string) error {
 	}
 
 	return nil
-
 }
 
+// searchInTree searches for sequences in a tree and returns the results.
+func searchInTree(parsedValues []byte, treePath string) []SeedDistance {
+	const sequenceLength = 32
+	stride := 1
+	seedDistances := make([]SeedDistance, 0)
+
+	bkTree, err := tree.New(treePath)
+	if err != nil {
+		panic(err)
+	}
+
+	for i := 0; i <= len(parsedValues)-sequenceLength; i += stride {
+		sequence := parsedValues[i : i+sequenceLength]
+		found, seed, distance := FindClosestInTree(bkTree, sequence)
+
+		if found {
+			seedDistances = append(seedDistances, SeedDistance{Seed: seed, Distance: distance})
+		}
+	}
+
+	return seedDistances
+}
+
+// findNodesFiles finds and returns a list of node files in a directory tree.
 func findNodesFiles(dataPath string) ([]string, error) {
 	var nodesFiles []string
 	stack := []string{dataPath}
@@ -66,21 +99,17 @@ func findNodesFiles(dataPath string) ([]string, error) {
 		dir := stack[len(stack)-1]
 		stack = stack[:len(stack)-1]
 
-		// List the contents of the current directory
 		entries, err := os.ReadDir(dir)
 		if err != nil {
 			return nil, err
 		}
 
-		// Process entries
 		for _, entry := range entries {
 			entryPath := filepath.Join(dir, entry.Name())
 
 			if entry.IsDir() {
-				// If it's a directory, add it to the stack for further processing
 				stack = append(stack, entryPath)
 			} else if strings.HasSuffix(entry.Name(), ".nodes.bin") {
-				// If it's a file ending with ".nodes.bin", add its path without extension to the list
 				fileWithoutExt := strings.TrimSuffix(entryPath, ".nodes.bin")
 				nodesFiles = append(nodesFiles, fileWithoutExt)
 			}
@@ -90,23 +119,17 @@ func findNodesFiles(dataPath string) ([]string, error) {
 	return nodesFiles, nil
 }
 
-func FindClosestInTree(treePath string, sequence [32]byte) (found bool, seed int32, distance uint32) {
-	bkTree, err := tree.New(treePath)
-
-	if err != nil {
-		panic(err)
-	}
-
-	result := bkTree.FindClosestElement(sequence, 16)
+// FindClosestInTree finds the closest element in the tree for a given sequence.
+func FindClosestInTree(bkTree *tree.Tree, sequence []byte) (found bool, seed int32, distance uint32) {
+	result := bkTree.FindClosestElement([32]byte(sequence), 16)
 
 	if result.Distance != math.MaxUint32 {
 		return true, result.Seed, result.Distance
-	} else {
-		return false, -1, math.MaxUint32
 	}
+	return false, -1, math.MaxUint32
 }
 
-// readFileAndParse reads a text file, parses numbers using the specified delimiter, and returns them as a byte slice.
+// readFileAndParse reads a file, parses it, and returns the parsed values as a byte array.
 func readFileAndParse(filename string, delimiter string, minNumber, maxNumber int) ([]byte, error) {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -140,7 +163,7 @@ func readFileAndParse(filename string, delimiter string, minNumber, maxNumber in
 	return byteArray, nil
 }
 
-// splitByDelimiter splits a string using the specified delimiter and returns a slice of substrings.
+// splitByDelimiter splits a string by a delimiter and returns the substrings.
 func splitByDelimiter(s string, delimiter string) []string {
 	return strings.Split(s, delimiter)
 }

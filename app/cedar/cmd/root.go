@@ -45,6 +45,7 @@ command to identify the seed that best matches the input sequence.`,
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	startTime := time.Now()
+
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
