@@ -7,36 +7,36 @@ import (
 )
 
 func TestEdgeSerializeDeserialize(t *testing.T) {
-	edge := Edge{
+	edge1 := edge{
 		ChildIndex: 43,
 		Distance:   12,
 	}
 
 	var buffer bytes.Buffer
-	err := edge.SerializeToBinaryStream(&buffer)
+	err := edge1.SerializeToBinaryStream(&buffer)
 	if err != nil {
 		t.Fatalf("Failed to serialize edge: %v", err)
 	}
 
-	var edge2 Edge
+	var edge2 edge
 	edge2, err = edge2.DeserializeFromBinaryStream(&buffer)
 
 	if err != nil {
 		t.Fatalf("Failed to deserialize edge: %v", err)
 	}
 
-	if edge2.ChildIndex != edge.ChildIndex {
-		t.Fatalf("ChildIndex did not match. Got %d, expected %d", edge2.ChildIndex, edge.ChildIndex)
+	if edge2.ChildIndex != edge1.ChildIndex {
+		t.Fatalf("ChildIndex did not match. Got %d, expected %d", edge2.ChildIndex, edge1.ChildIndex)
 	}
 
-	if edge2.Distance != edge.Distance {
-		t.Fatalf("Distance did not match. Got %d, expected %d", edge2.Distance, edge.Distance)
+	if edge2.Distance != edge1.Distance {
+		t.Fatalf("Distance did not match. Got %d, expected %d", edge2.Distance, edge1.Distance)
 	}
 
 }
 
 func TestEdgeSerializedSize(t *testing.T) {
-	edge := Edge{
+	edge := edge{
 		ChildIndex: 43,
 		Distance:   12,
 	}

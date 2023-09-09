@@ -20,7 +20,7 @@ func FormatByteArrayAsNumbers(byteArray []byte, itemsPerLine int) string {
 			formattedNumbers = append(formattedNumbers, "\n")
 		} else if i != len(byteArray)-1 {
 			// Add a comma if it's not the last item
-			formattedNumbers = append(formattedNumbers, ", ")
+			formattedNumbers = append(formattedNumbers, " ")
 		}
 	}
 

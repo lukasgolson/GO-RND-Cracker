@@ -22,8 +22,10 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"runtime"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -42,9 +44,21 @@ command to identify the seed that best matches the input sequence.`,
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+	startTime := time.Now()
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
+	}
+
+	endTime := time.Now()
+
+	quiet, err := rootCmd.PersistentFlags().GetBool("quiet")
+	if err != nil {
+		return
+	}
+
+	if !quiet {
+		fmt.Printf("\nFinished command execution in %s.\n\n", endTime.Sub(startTime))
 	}
 }
 
@@ -59,4 +73,5 @@ func init() {
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	rootCmd.PersistentFlags().IntP("cores", "c", runtime.NumCPU(), "The number of CPU cores to use during processing")
+	rootCmd.PersistentFlags().BoolP("quiet", "q", false, "Disables all superficial command text")
 }

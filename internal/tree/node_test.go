@@ -7,40 +7,40 @@ import (
 )
 
 func TestNodeSerializeDeserialize(t *testing.T) {
-	node := Node{
+	node1 := node{
 		ID:   42,
 		Word: [NodeWordSize]byte{1, 2, 3, 4},
 		Seed: 12,
 	}
 
 	var buffer bytes.Buffer
-	err := node.SerializeToBinaryStream(&buffer)
+	err := node1.SerializeToBinaryStream(&buffer)
 	if err != nil {
 		t.Fatalf("Failed to serialize node: %v", err)
 	}
 
-	var node2 Node
+	var node2 node
 	node2, err = node2.DeserializeFromBinaryStream(&buffer)
 
 	if err != nil {
 		t.Fatalf("Failed to deserialize node: %v", err)
 	}
 
-	if node2.ID != node.ID {
-		t.Fatalf("ID did not match. Got %d, expected %d", node2.ID, node.ID)
+	if node2.ID != node1.ID {
+		t.Fatalf("ID did not match. Got %d, expected %d", node2.ID, node1.ID)
 	}
 
-	if node2.Word != node.Word {
-		t.Fatalf("Word did not match. Got %d, expected %d", node2.Word, node.Word)
+	if node2.Word != node1.Word {
+		t.Fatalf("Word did not match. Got %d, expected %d", node2.Word, node1.Word)
 	}
 
-	if node2.Seed != node.Seed {
-		t.Fatalf("Seed did not match. Got %d, expected %d", node2.Seed, node.Seed)
+	if node2.Seed != node1.Seed {
+		t.Fatalf("Seed did not match. Got %d, expected %d", node2.Seed, node1.Seed)
 	}
 }
 
 func TestNodeSerializedSize(t *testing.T) {
-	node := Node{
+	node := node{
 		ID:   42,
 		Word: [NodeWordSize]byte{1, 2, 3, 4},
 		Seed: 12,
@@ -58,7 +58,7 @@ func TestNodeSerializedSize(t *testing.T) {
 		t.Fatalf("StrideLength() did not return the correct size. Got %d, expected %d", size, len(buffer.Bytes()))
 	}
 
-	println("Node serialized size:", size)
+	println("node serialized size:", size)
 }
 
 func TestNewNode(t *testing.T) {

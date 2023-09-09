@@ -22,9 +22,10 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"awesomeProject/internal/application"
 	"fmt"
-
 	"github.com/spf13/cobra"
+	"os"
 )
 
 // searchCmd represents the search command
@@ -33,7 +34,37 @@ var searchCmd = &cobra.Command{
 	Short: "Search for the seed that best matches the input sequence.",
 	Long:  `Provided with a text file containing a sequence of numbers, Cedar will search for the seed that best matches the input sequence.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("search called")
+
+		inputFile, err := cmd.Flags().GetString("input")
+
+		if err != nil {
+			panic(err)
+		}
+
+		isCSV, err := cmd.Flags().GetBool("csv")
+
+		var deliminator string
+
+		if isCSV {
+			deliminator = ", "
+		} else {
+			deliminator = " "
+		}
+
+		_, err = os.Stat(inputFile)
+		if err != nil {
+			if os.IsNotExist(err) {
+				fmt.Printf("input file '%s' does not exist", inputFile)
+				return
+			}
+
+		}
+
+		err = application.Search(inputFile, deliminator)
+		if err != nil {
+			panic(err)
+		}
+
 	},
 }
 
@@ -49,4 +80,7 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// searchCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
+	searchCmd.Flags().StringP("input", "i", "numbers.txt", "The input file containing the sequence to search for")
+	searchCmd.Flags().BoolP("csv", "e", false, "The input file is CSV deliminated")
 }

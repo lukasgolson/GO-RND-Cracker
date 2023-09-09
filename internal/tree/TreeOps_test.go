@@ -99,19 +99,19 @@ func TestFuzzyMatch(t *testing.T) {
 	word := make([]byte, NodeWordSize)
 	copy(word[:], "cat")
 
-	foundNode, distance := tree.FindClosestElement(0, [32]byte(word), 1)
+	results := tree.FindClosestElement([32]byte(word), 1)
 
-	if distance != 0 {
-		t.Errorf("Expected distance to be 0, but got: %v.", distance)
+	if results.Distance != 0 {
+		t.Errorf("Expected distance to be 0, but got: %v.", results.Distance)
 	}
 
 	word = make([]byte, NodeWordSize)
 	copy(word[:], "cats")
 
-	_, distance = tree.FindClosestElement(0, [32]byte(word), 10)
+	results = tree.FindClosestElement([32]byte(word), 10)
 
-	if distance != 1 {
-		t.Errorf("Expected distance to be 1, but got: %v. Tested word %v, found word %v", distance, string(word[:]), string(foundNode.Word[:]))
+	if results.Distance != 1 {
+		t.Errorf("Expected distance to be 1, but got: %v. Tested word %v, found word %v", results.Distance, string(word[:]), string(results.Word[:]))
 	}
 }
 

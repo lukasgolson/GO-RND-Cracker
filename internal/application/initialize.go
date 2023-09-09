@@ -8,7 +8,6 @@ import (
 	"os"
 	"runtime"
 	"sync"
-	"time"
 )
 
 func processPartition(lo, hi, fileCount int64, directory string, randSource *rand.Rand) error {
@@ -53,7 +52,7 @@ func processPartition(lo, hi, fileCount int64, directory string, randSource *ran
 	return nil
 }
 
-func Initialize(coreCount int, fileCount int, seedCount int64, directory string) error {
+func Initialize(coreCount int, fileCount int, seedCount int64, dataDirectory string) error {
 
 	if coreCount < 1 {
 		return fmt.Errorf("cpu count must be at least 1")
@@ -71,14 +70,12 @@ func Initialize(coreCount int, fileCount int, seedCount int64, directory string)
 		return fmt.Errorf("file count must be greater than or equal to the core count")
 	}
 
-	err := os.MkdirAll(directory, os.ModePerm)
+	err := os.MkdirAll(dataDirectory, os.ModePerm)
 	if err != nil {
 		return err
 	}
 
 	var wg sync.WaitGroup
-
-	startTime := time.Now()
 
 	partitionSize := seedCount / int64(coreCount)
 
@@ -94,7 +91,7 @@ func Initialize(coreCount int, fileCount int, seedCount int64, directory string)
 		go func(lo, hi int64, partitionID int64) {
 			defer wg.Done()
 			randSource := rand.New(rand.NewSource(0))
-			subdir := fmt.Sprintf("%s/partition-%d", directory, partitionID)
+			subdir := fmt.Sprintf("%s/partition-%d", dataDirectory, partitionID)
 
 			if err := processPartition(lo, hi, filesPerPartition, subdir, randSource); err != nil {
 				log.Printf("Error processing partition: %v\n", err)
@@ -103,9 +100,6 @@ func Initialize(coreCount int, fileCount int, seedCount int64, directory string)
 	}
 
 	wg.Wait()
-
-	endTime := time.Now()
-	fmt.Printf("Finished seed generation in %s.\n", endTime.Sub(startTime))
 
 	return nil
 }

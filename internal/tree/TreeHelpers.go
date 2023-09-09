@@ -21,9 +21,9 @@ func (tree *Tree) findChildNodeWithDistance(parentNodeID serialization.Offset, d
 	return 0, false
 }
 
-func (tree *Tree) getEgressArcs(parentNodeID serialization.Offset) []Edge {
+func (tree *Tree) getEgressArcs(parentNodeID serialization.Offset) []edge {
 	// Create a slice to store egress arcs
-	egressArcs := make([]Edge, 0)
+	egressArcs := make([]edge, 0)
 
 	valid, count, err := tree.edges.Count(parentNodeID)
 

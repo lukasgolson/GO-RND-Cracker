@@ -8,8 +8,8 @@ import (
 )
 
 type Tree struct {
-	nodes *fileArray.FileArray[Node]
-	edges *fileLinkedList.FileLinkedList[Edge]
+	nodes *fileArray.FileArray[node]
+	edges *fileLinkedList.FileLinkedList[edge]
 
 	closing bool
 }
@@ -22,8 +22,8 @@ func New(filename string) (*Tree, error) {
 
 	var err error
 
-	bkTree.nodes, err = fileArray.NewFileArray[Node](nodesFilename)
-	bkTree.edges, err = fileLinkedList.NewFileLinkedList[Edge](edgesFilename)
+	bkTree.nodes, err = fileArray.NewFileArray[node](nodesFilename)
+	bkTree.edges, err = fileLinkedList.NewFileLinkedList[edge](edgesFilename)
 
 	if err != nil {
 		return nil, err
@@ -67,7 +67,7 @@ func (tree *Tree) addEdge(parentIndex, childIndex serialization.Offset, distance
 	return err
 }
 
-func (tree *Tree) getNodeByIndex(index serialization.Offset) (Node, error) {
+func (tree *Tree) getNodeByIndex(index serialization.Offset) (node, error) {
 	return tree.nodes.GetItemFromIndex(index)
 }
 
@@ -101,4 +101,8 @@ func (tree *Tree) ShrinkWrap() error {
 	}
 
 	return nil
+}
+
+func (tree *Tree) Length() serialization.Length {
+	return tree.nodes.Count()
 }
