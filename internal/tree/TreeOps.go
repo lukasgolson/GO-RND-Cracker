@@ -53,7 +53,7 @@ func (tree *Tree) Add(word [NodeWordSize]byte, seed int32) error {
 }
 
 func (tree *Tree) FindClosestElement(rootId serialization.Offset, word [NodeWordSize]byte, maxDistance uint32) (*Node, uint32) {
-	if tree.Nodes.Count() == 0 {
+	if tree.nodes.Count() == 0 {
 		return nil, math.MaxUint32
 	}
 

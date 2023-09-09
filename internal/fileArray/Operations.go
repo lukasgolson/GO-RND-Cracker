@@ -113,12 +113,12 @@ func (fileArray *FileArray[T]) GetItemFromIndex(index serialization.Offset) (T, 
 	return item, nil
 }
 
-// ShrinkWrapFileArray reduces the size of a FileArray to match the actual data size.
+// ShrinkWrap reduces the size of a FileArray to match the actual data size.
 // It is used to optimize disk usage by resizing the array to fit its contents.
 //
 // Returns:
 //   - An error if the operation fails, nil otherwise.
-func (fileArray *FileArray[T]) ShrinkWrapFileArray() error {
+func (fileArray *FileArray[T]) ShrinkWrap() error {
 	var sampleItem T
 
 	err := fileArray.shrinkFileSizeToDataSize(sampleItem.StrideLength())

@@ -22,9 +22,10 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"awesomeProject/internal/application"
 	"fmt"
-
 	"github.com/spf13/cobra"
+	"math/rand"
 )
 
 // genCmd represents the gen command
@@ -32,7 +33,39 @@ var genCmd = &cobra.Command{
 	Use:   "gen",
 	Short: "From a given seed, generates a sequence of numbers.",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("gen called")
+
+		seed, err := cmd.Flags().GetInt("seed")
+
+		if err != nil {
+			panic(err)
+		}
+
+		length, err := cmd.Flags().GetInt("length")
+
+		if err != nil {
+			panic(err)
+		}
+
+		csv, err := cmd.Flags().GetBool("csv")
+
+		if err != nil {
+			panic(err)
+		}
+
+		sequence := application.GenerateRandomSequence(int64(seed), int64(length), rand.New(rand.NewSource(0)))
+
+		if csv {
+			csvString, err := application.FormatByteArrayAsCSV(sequence)
+			if err != nil {
+				panic(err)
+			}
+			fmt.Println(csvString)
+			return
+		} else {
+			fmt.Println(application.FormatByteArrayAsNumbers(sequence, 16))
+			return
+		}
+
 	},
 }
 
@@ -48,4 +81,8 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// genCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
+	genCmd.Flags().IntP("seed", "s", 0, "The seed to use when generating the sequence")
+	genCmd.Flags().IntP("length", "l", 32, "The length of the sequence to generate")
+	genCmd.Flags().BoolP("csv", "e", false, "Format the output as a CSV record")
 }

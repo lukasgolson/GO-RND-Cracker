@@ -23,8 +23,8 @@ package cmd
 
 import (
 	"awesomeProject/internal/application"
-	"fmt"
 	"github.com/spf13/cobra"
+	"runtime"
 )
 
 // initCmd represents the init command
@@ -35,8 +35,33 @@ var initCmd = &cobra.Command{
 
 Note that this command will take a long time to complete, and will use a lot of disk space (over 250 GB).`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("init called")
-		application.Initialize()
+
+		coreCount, err := cmd.Flags().GetInt("cores")
+
+		if err != nil {
+			panic(err)
+		}
+
+		fileCount, err := cmd.Flags().GetInt("files")
+
+		if err != nil {
+			panic(err)
+		}
+
+		seedCount, err := cmd.Flags().GetInt64("seedCount")
+		if err != nil {
+			panic(err)
+		}
+
+		directory, err := cmd.Flags().GetString("directory")
+		if err != nil {
+			panic(err)
+		}
+
+		err = application.Initialize(coreCount, fileCount, seedCount, directory)
+		if err != nil {
+			panic(err)
+		}
 	},
 }
 
@@ -52,4 +77,8 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// initCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
+	initCmd.Flags().IntP("files", "f", runtime.NumCPU(), "Number of file partitions to split the seed space into")
+	initCmd.Flags().Int64P("seedCount", "s", 1<<31-1, "Upper bound on the number of seeds to generate")
+	initCmd.Flags().String("directory", "data", "The directory to store the lookup graphs in")
 }

@@ -1,7 +1,6 @@
 package application
 
 import (
-	"awesomeProject/internal/serialization"
 	"awesomeProject/internal/tree"
 	"fmt"
 	"log"
@@ -12,72 +11,95 @@ import (
 	"time"
 )
 
-func generateRandomSequence(seed int64, length int64, randSource *rand.Rand) []byte {
-	randSource.Seed(seed)
+func processPartition(lo, hi, fileCount int64, directory string, randSource *rand.Rand) error {
+	totalSeeds := hi - lo
 
-	byteArray := make([]byte, length)
-
-	for i := serialization.Length(0); i < serialization.Length(length); i++ {
-		val := randSource.Intn(101) // Generate a value between 0 and 100
-		byteArray[i] = byte(val)
+	if fileCount > totalSeeds {
+		fileCount = totalSeeds
 	}
 
-	return byteArray
-}
+	seedsPerFile := totalSeeds / fileCount
 
-func processPartition(lo, hi int64, randSource *rand.Rand) error {
+	err := os.MkdirAll(directory, os.ModePerm)
+	if err != nil {
+		return err
+	}
 
-	// Create a new tree, name it after the partition. This will be the file name.
-	// Place it in a subdirectory of the current directory.
+	for fileIndex := int64(0); fileIndex < fileCount; fileIndex++ {
+		startSeed := lo + (fileIndex * seedsPerFile)
+		endSeed := startSeed + seedsPerFile
 
-	subdir := fmt.Sprintf("partition-%d", lo)
-	os.MkdirAll(subdir, 0755)
+		treeDir := fmt.Sprintf("%s/graph-%d", directory, fileIndex)
+		var bktree, err = tree.New(treeDir)
+		if err != nil {
+			return err
+		}
 
-	var tree, _ = tree.New(subdir + "/graph")
+		for seed := startSeed; seed < endSeed; seed++ {
+			sequence := GenerateRandomSequence(seed, 32, randSource)
 
-	var counter = 0
+			err := bktree.Add([32]byte(sequence), int32(seed))
+			if err != nil {
+				return err
+			}
+		}
 
-	for i := lo + 1; i < hi; i++ {
-		seed := i
-		counter++
-
-		// Generate the sequence based on the random source
-		var sequence = generateRandomSequence(seed, 32, randSource)
-
-		tree.Add([32]byte(sequence), int32(seed))
-
+		err = bktree.ShrinkWrap()
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-func Initialize() {
+func Initialize(coreCount int, fileCount int, seedCount int64, directory string) error {
 
-	numPartitions := runtime.NumCPU() - 1
+	if coreCount < 1 {
+		return fmt.Errorf("cpu count must be at least 1")
+	}
 
-	seedCount := int64(1<<31 - 1)
+	if coreCount > runtime.NumCPU() {
+		return fmt.Errorf("core count must be less than or equal to the number of available cores")
+	}
 
-	partitionSize := seedCount / int64(numPartitions)
+	if fileCount < 1 {
+		return fmt.Errorf("file count must be at least 1")
+	}
+
+	if fileCount < coreCount {
+		return fmt.Errorf("file count must be greater than or equal to the core count")
+	}
+
+	err := os.MkdirAll(directory, os.ModePerm)
+	if err != nil {
+		return err
+	}
 
 	var wg sync.WaitGroup
 
 	startTime := time.Now()
 
-	for p := int64(0); p < int64(numPartitions); p++ {
+	partitionSize := seedCount / int64(coreCount)
+
+	filesPerPartition := int64(fileCount) / int64(coreCount)
+
+	for p := int64(0); p < int64(coreCount); p++ {
 		lo := partitionSize * p
 		hi := partitionSize * (p + 1)
-		fmt.Printf("Partition %d (%d, %d)\n", p, lo, hi)
+		fmt.Printf("Processing partition %d (%d, %d)\n", p, lo, hi)
 
 		wg.Add(1)
 
-		go func(lo, hi int64) {
+		go func(lo, hi int64, partitionID int64) {
 			defer wg.Done()
-
 			randSource := rand.New(rand.NewSource(0))
-			if err := processPartition(lo, hi, randSource); err != nil {
+			subdir := fmt.Sprintf("%s/partition-%d", directory, partitionID)
+
+			if err := processPartition(lo, hi, filesPerPartition, subdir, randSource); err != nil {
 				log.Printf("Error processing partition: %v\n", err)
 			}
-		}(lo, hi)
+		}(lo, hi, p)
 	}
 
 	wg.Wait()
@@ -85,4 +107,5 @@ func Initialize() {
 	endTime := time.Now()
 	fmt.Printf("Finished seed generation in %s.\n", endTime.Sub(startTime))
 
+	return nil
 }
