@@ -1,3 +1,5 @@
+//go:generate go-winres make
+
 /*
 Copyright © 2023 Lukas G. Olson <lukasolson64@gmail.com>
 
