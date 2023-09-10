@@ -7,7 +7,6 @@ import (
 	"math"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -19,10 +18,7 @@ type SeedDistance struct {
 }
 
 // Search performs a search operation on a set of trees.
-func Search(inputFile string, delimiter string, numCPU int) error {
-	// Save the current GOMAXPROCS value and set it to numCPU.
-	previousMaxProcs := runtime.GOMAXPROCS(numCPU)
-	defer runtime.GOMAXPROCS(previousMaxProcs) // Restore the original GOMAXPROCS value when done.
+func Search(inputFile string, delimiter string) error {
 
 	trees, err := findNodesFiles("data")
 	if err != nil {

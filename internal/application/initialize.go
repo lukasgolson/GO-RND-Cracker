@@ -6,7 +6,6 @@ import (
 	"log"
 	"math/rand"
 	"os"
-	"runtime"
 	"sync"
 )
 
@@ -53,14 +52,6 @@ func processPartition(lo, hi, fileCount int64, directory string, randSource *ran
 }
 
 func Initialize(coreCount int, fileCount int, seedCount int64, dataDirectory string) error {
-
-	if coreCount < 1 {
-		return fmt.Errorf("cpu count must be at least 1")
-	}
-
-	if coreCount > runtime.NumCPU() {
-		return fmt.Errorf("core count must be less than or equal to the number of available cores")
-	}
 
 	if fileCount < 1 {
 		return fmt.Errorf("file count must be at least 1")
