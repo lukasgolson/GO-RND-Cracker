@@ -23,52 +23,36 @@ func NewNode(ID serialization.Offset, word [NodeWordSize]byte, seed int32) *node
 }
 
 func (n node) SerializeToBinaryStream(writer io.Writer) error {
-	err := binary.Write(writer, binary.LittleEndian, n.ID)
-	if err != nil {
-		return err
-	}
 
-	err = binary.Write(writer, binary.LittleEndian, n.Word[:])
-	if err != nil {
-		return err
-	}
+	buf := make([]byte, 8+NodeWordSize+4) // Create a buffer for int64 (8 bytes), word (32 bytes) and int32 (4 bytes)
 
-	err = binary.Write(writer, binary.LittleEndian, n.Seed)
-	if err != nil {
-		return err
-	}
+	binary.LittleEndian.PutUint64(buf[0:8], uint64(n.ID))                               // Convert int64 to little-endian binary and put it in the buffer
+	copy(buf[8:8+NodeWordSize], n.Word[:])                                              // Copy the word into the buffer
+	binary.LittleEndian.PutUint32(buf[8+NodeWordSize:8+NodeWordSize+4], uint32(n.Seed)) // Convert int32 to little-endian binary and put it in the buffer
 
-	return nil
+	_, err := writer.Write(buf)
+	return err
 }
 
 func (n node) DeserializeFromBinaryStream(reader io.Reader) (node, error) {
-	var ID serialization.Offset
-	err := binary.Read(reader, binary.LittleEndian, &ID)
+	buf := make([]byte, 8+NodeWordSize+4) // Create a buffer for int64 (8 bytes), word (32 bytes) and int32 (4 bytes)
+
+	_, err := io.ReadFull(reader, buf)
 	if err != nil {
 		return n, err
 	}
 
-	var word [NodeWordSize]byte
-	err = binary.Read(reader, binary.LittleEndian, &word)
-	if err != nil {
-		return n, err
-	}
+	n.ID = serialization.Offset(binary.LittleEndian.Uint64(buf[0:8])) // Read the little-endian binary from the buffer and convert to offset
 
-	var seed int32
-	err = binary.Read(reader, binary.LittleEndian, &seed)
-	if err != nil {
-		return n, err
-	}
+	copy(n.Word[:], buf[8:8+NodeWordSize])
 
-	n.ID = ID
-	n.Word = word
-	n.Seed = seed
+	n.Seed = int32(binary.LittleEndian.Uint32(buf[8+NodeWordSize : 8+NodeWordSize+4])) // Read the little-endian binary from the buffer and convert to int32
 
 	return n, nil
 }
 
 func (n node) StrideLength() serialization.Length {
-	return serialization.Length(binary.Size(n.ID) + len(n.Word) + binary.Size(n.Seed))
+	return 8 + NodeWordSize + 4
 }
 
 func (n node) IDByte() byte {

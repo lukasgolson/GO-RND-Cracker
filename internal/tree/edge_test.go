@@ -55,7 +55,7 @@ func TestEdgeSerializedSize(t *testing.T) {
 }
 
 func TestNewEdge(t *testing.T) {
-	edge := NewEdge(42, 43, 12)
+	edge := NewEdge(43, 12)
 
 	if edge.ChildIndex != 43 {
 		t.Fatalf("ChildIndex did not match. Got %d, expected %d", edge.ChildIndex, 43)
