@@ -159,6 +159,8 @@ func (fileArray *FileArray[T]) getCounterSlice() []byte {
 // Returns:
 //   - error: An error if the expansion fails.
 func (fileArray *FileArray[T]) expandMemoryMapSize(expansionSize int64) error {
+	fileArray.saveCount()
+
 	currentSize, err := fileArray.backingFile.Seek(0, io.SeekEnd)
 	if err != nil {
 		return err
@@ -208,6 +210,26 @@ func (fileArray *FileArray[T]) multiplyMemoryMapSize(multiplier float64) error {
 	return nil
 }
 
+// Expand increases the size of the memory-mapped region by the specified number of items.
+func (fileArray *FileArray[T]) Expand(items serialization.Length) error {
+	var item T
+
+	arraySize := item.StrideLength() * items
+
+	currentSize := item.StrideLength() * fileArray.Count()
+
+	expansionSize := arraySize - currentSize
+
+	if expansionSize > 0 {
+		err := fileArray.expandMemoryMapSize(int64(arraySize))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // shrinkFileSizeToDataSize reduces the size of the backing file to match the actual data size, excluding the header.
 //
 // Parameters:
@@ -216,6 +238,8 @@ func (fileArray *FileArray[T]) multiplyMemoryMapSize(multiplier float64) error {
 // Returns:
 //   - error: An error if the operation fails.
 func (fileArray *FileArray[T]) shrinkFileSizeToDataSize(itemSize serialization.Length) error {
+
+	fileArray.saveCount()
 
 	dataSize := int64(itemSize*fileArray.Count()) + headerLength
 

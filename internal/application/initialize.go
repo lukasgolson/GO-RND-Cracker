@@ -11,13 +11,13 @@ import (
 )
 
 func processPartition(lo, hi, fileCount int64, graphPath string, randSource *rand.Rand) error {
-	totalSeeds := hi - lo
+	numberOfSeeds := hi - lo
 
-	if fileCount > totalSeeds {
-		fileCount = totalSeeds
+	if fileCount > numberOfSeeds {
+		fileCount = numberOfSeeds
 	}
 
-	seedsPerFile := totalSeeds / fileCount
+	seedsPerFile := numberOfSeeds / fileCount
 
 	err := os.MkdirAll(graphPath, os.ModePerm)
 	if err != nil {
@@ -25,15 +25,15 @@ func processPartition(lo, hi, fileCount int64, graphPath string, randSource *ran
 	}
 
 	for fileIndex := int64(0); fileIndex < fileCount; fileIndex++ {
-		var bktree, err = tree.NewOrLoad(graphPath)
+		var bkTree, err = tree.NewOrLoad(graphPath)
 		if err != nil {
 			return err
 		}
 		startSeed := lo + (fileIndex * seedsPerFile)
 		endSeed := startSeed + seedsPerFile
-		loadedSeedPosition := serialization.Length(lo) + bktree.Length()
+		loadedSeedPosition := serialization.Length(lo) + bkTree.Length()
 
-		if bktree.Length() > 0 {
+		if bkTree.Length() > 0 {
 			fmt.Println("Loading existing tree... Start seed", startSeed, "end seed:", endSeed, "previous end seed:", loadedSeedPosition)
 
 			if loadedSeedPosition > serialization.Length(startSeed) && loadedSeedPosition < serialization.Length(endSeed) {
@@ -57,18 +57,23 @@ func processPartition(lo, hi, fileCount int64, graphPath string, randSource *ran
 			}
 		} else {
 			fmt.Println("No existing tree found. Creating new tree... Start seed", startSeed, "end seed:", endSeed)
-		}
 
-		for seed := startSeed; seed < endSeed; seed++ {
-			sequence := GenerateRandomSequence(seed, 32, randSource)
-
-			err := bktree.Add([32]byte(sequence), int32(seed))
+			err := bkTree.PreExpand(serialization.Length(numberOfSeeds))
 			if err != nil {
 				return err
 			}
 		}
 
-		err = bktree.ShrinkWrap()
+		for seed := startSeed; seed < endSeed; seed++ {
+			sequence := GenerateRandomSequence(seed, 32, randSource)
+
+			err := bkTree.Add([32]byte(sequence), int32(seed))
+			if err != nil {
+				return err
+			}
+		}
+
+		err = bkTree.ShrinkWrap()
 		if err != nil {
 			return err
 		}

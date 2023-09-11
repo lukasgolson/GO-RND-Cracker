@@ -106,3 +106,23 @@ func (tree *Tree) ShrinkWrap() error {
 func (tree *Tree) Length() serialization.Length {
 	return tree.nodes.Count()
 }
+
+func (tree *Tree) PreExpand(length serialization.Length) error {
+
+	err := tree.nodes.Expand(length)
+	if err != nil {
+		return err
+	}
+	err = tree.edges.ExpandIndex(length)
+	if err != nil {
+		return err
+	}
+
+	err = tree.edges.ExpandElements(length * 2)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}

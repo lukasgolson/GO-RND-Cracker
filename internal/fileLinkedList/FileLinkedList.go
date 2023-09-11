@@ -324,8 +324,11 @@ func (list *FileLinkedList[T]) GetFileName() (string, string) {
 
 func (list *FileLinkedList[T]) Close() error {
 
-	list.elementsArray.Close()
-	list.indexArray.Close()
+	err := list.elementsArray.Close()
+	err = list.indexArray.Close()
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -337,6 +340,24 @@ func (list *FileLinkedList[T]) ShrinkWrap() error {
 		return err
 	}
 	err = list.indexArray.ShrinkWrap()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (list *FileLinkedList[T]) ExpandElements(length serialization.Length) error {
+	err := list.elementsArray.Expand(length)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (list *FileLinkedList[T]) ExpandIndex(length serialization.Length) error {
+	err := list.indexArray.Expand(length)
 	if err != nil {
 		return err
 	}
