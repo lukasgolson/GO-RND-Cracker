@@ -14,7 +14,6 @@ type SearchResult struct {
 }
 
 func (tree *Tree) Add(word [NodeWordSize]byte, seed int32) error {
-	// Step 1: Check if the tree is empty, if so, create a root node.
 	if tree.isEmpty() {
 
 		if _, err := tree.addNode(word, seed); err != nil {

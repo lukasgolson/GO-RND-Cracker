@@ -14,7 +14,7 @@ type Tree struct {
 	closing bool
 }
 
-func New(filename string) (*Tree, error) {
+func NewOrLoad(filename string) (*Tree, error) {
 	bkTree := &Tree{}
 
 	nodesFilename := fmt.Sprintf("%s.nodes.bin", filename)

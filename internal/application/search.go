@@ -69,7 +69,7 @@ func searchInTree(parsedValues []byte, treePath string) []SeedDistance {
 	stride := 1
 	seedDistances := make([]SeedDistance, 0)
 
-	bkTree, err := tree.New(treePath)
+	bkTree, err := tree.NewOrLoad(treePath)
 	if err != nil {
 		panic(err)
 	}

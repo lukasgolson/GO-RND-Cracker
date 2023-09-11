@@ -1,6 +1,7 @@
 package application
 
 import (
+	"awesomeProject/internal/serialization"
 	"awesomeProject/internal/tree"
 	"fmt"
 	"log"
@@ -24,12 +25,38 @@ func processPartition(lo, hi, fileCount int64, graphPath string, randSource *ran
 	}
 
 	for fileIndex := int64(0); fileIndex < fileCount; fileIndex++ {
-		startSeed := lo + (fileIndex * seedsPerFile)
-		endSeed := startSeed + seedsPerFile
-
-		var bktree, err = tree.New(graphPath)
+		var bktree, err = tree.NewOrLoad(graphPath)
 		if err != nil {
 			return err
+		}
+		startSeed := lo + (fileIndex * seedsPerFile)
+		endSeed := startSeed + seedsPerFile
+		loadedSeedPosition := serialization.Length(lo) + bktree.Length()
+
+		if bktree.Length() > 0 {
+			fmt.Println("Loading existing tree... Start seed", startSeed, "end seed:", endSeed, "previous end seed:", loadedSeedPosition)
+
+			if loadedSeedPosition > serialization.Length(startSeed) && loadedSeedPosition < serialization.Length(endSeed) {
+
+				fmt.Println("Previous tree is in range. Everything is fine.")
+
+				const seedOverlap = 5
+
+				newStartSeed := int64(loadedSeedPosition) - seedOverlap
+
+				if newStartSeed < startSeed {
+					newStartSeed = startSeed
+				}
+
+				startSeed = newStartSeed
+
+			} else if loadedSeedPosition < serialization.Length(startSeed) {
+				return fmt.Errorf("previous tree ends before our start seed")
+			} else if loadedSeedPosition > serialization.Length(endSeed) {
+				return fmt.Errorf("previous tree ends after our end seed")
+			}
+		} else {
+			fmt.Println("No existing tree found. Creating new tree... Start seed", startSeed, "end seed:", endSeed)
 		}
 
 		for seed := startSeed; seed < endSeed; seed++ {
@@ -88,7 +115,7 @@ func Initialize(coreCount int, fileCount int, seedCount int64, dataDirectories [
 		go func(lo, hi int64, partitionID int64) {
 			defer wg.Done()
 			randSource := rand.New(rand.NewSource(0))
-			subdir := fmt.Sprintf("%d/partition-%d", dataDirectory, p)
+			subdir := fmt.Sprintf("%s/partition-%d", dataDirectory, p)
 
 			if err := processPartition(lo, hi, filesPerPartition, subdir, randSource); err != nil {
 				log.Printf("Error processing partition: %v\n", err)
