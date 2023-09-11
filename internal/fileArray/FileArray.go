@@ -166,7 +166,8 @@ func (fileArray *FileArray[T]) expandMemoryMapSize(expansionSize int64) error {
 		return err
 	}
 
-	if err := fileArray.memoryMap.Unmap(); err != nil {
+	err = fileArray.Unmap()
+	if err != nil {
 		return err
 	}
 
@@ -243,7 +244,7 @@ func (fileArray *FileArray[T]) shrinkFileSizeToDataSize(itemSize serialization.L
 
 	dataSize := int64(itemSize*fileArray.Count()) + headerLength
 
-	err := (*fileArray).memoryMap.Unmap()
+	err := (*fileArray).Unmap()
 	if err != nil {
 		return err
 	}
@@ -278,12 +279,10 @@ func (fileArray *FileArray[T]) hasSpace(dataSize uint64) bool {
 // Returns:
 //   - error: An error if unmap or file close operations fail.
 func (fileArray *FileArray[T]) Close() error {
-	var err error
 
-	fileArray.saveCount()
-
-	if fileArray.memoryMap != nil {
-		err = fileArray.memoryMap.Unmap()
+	err := fileArray.Unmap()
+	if err != nil {
+		return err
 	}
 
 	if fileArray.backingFile != nil {
@@ -296,4 +295,18 @@ func (fileArray *FileArray[T]) Close() error {
 // GetFileName returns the name of the backing file.
 func (fileArray *FileArray[T]) GetFileName() string {
 	return fileArray.backingFile.Name()
+}
+
+func (fileArray *FileArray[T]) Unmap() error {
+
+	if fileArray.memoryMap != nil {
+		fileArray.saveCount()
+
+		err := fileArray.memoryMap.Unmap()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
