@@ -51,8 +51,6 @@ var searchCmd = &cobra.Command{
 			deliminator = " "
 		}
 
-		cores, _ := cmd.Flags().GetInt("cores")
-
 		_, err = os.Stat(inputFile)
 		if err != nil {
 			if os.IsNotExist(err) {
@@ -62,7 +60,7 @@ var searchCmd = &cobra.Command{
 
 		}
 
-		err = application.Search(inputFile, deliminator, cores)
+		err = application.Search(inputFile, deliminator)
 		if err != nil {
 			panic(err)
 		}

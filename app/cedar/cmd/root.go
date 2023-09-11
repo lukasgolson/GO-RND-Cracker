@@ -23,12 +23,17 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"runtime"
+	"runtime/pprof"
 	"time"
 
 	"github.com/spf13/cobra"
 )
+
+var memProfileFile *os.File
+var cpuProfileFile *os.File
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -39,6 +44,75 @@ the best matching seed for  Golang's random number generator.
 
 Use the 'generate' command to create lookup tables, and the 'search' 
 command to identify the seed that best matches the input sequence.`,
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+
+		err := cmd.ParseFlags(args)
+		if err != nil {
+			return err
+		}
+
+		pgo, err := cmd.Flags().GetBool("pgo")
+
+		if err != nil {
+			return err
+		}
+
+		if pgo {
+			println("[Enabling profile-guided optimization (PGO) output]")
+
+			StartCPUProfile()
+			StartMemProfile()
+		}
+		return nil
+	},
+	PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
+		pgo, err := cmd.Flags().GetBool("pgo")
+		if err != nil {
+			return err
+		}
+
+		if pgo {
+			pprof.StopCPUProfile()
+
+			err := cpuProfileFile.Close()
+			if err != nil {
+				return err
+			}
+
+			err = memProfileFile.Close()
+
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	},
+}
+
+func StartCPUProfile() {
+	f, err := os.Create("cpu.prof")
+	cpuProfileFile = f
+	if err != nil {
+		log.Fatal("could not create CPU profile: ", err)
+	}
+
+	if err := pprof.StartCPUProfile(cpuProfileFile); err != nil {
+		log.Fatal("could not start CPU profile: ", err)
+	}
+}
+
+func StartMemProfile() {
+	f, err := os.Create("mem.prof")
+	memProfileFile = f
+	if err != nil {
+		log.Fatal("could not create memory profile: ", err)
+	}
+
+	runtime.GC() // get up-to-date statistics
+	if err := pprof.WriteHeapProfile(memProfileFile); err != nil {
+		log.Fatal("could not write memory profile: ", err)
+	}
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -75,4 +149,5 @@ func init() {
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	rootCmd.PersistentFlags().IntP("cores", "c", runtime.NumCPU(), "The number of CPU cores to use during processing")
 	rootCmd.PersistentFlags().BoolP("quiet", "q", false, "Disables all superficial command text")
+	rootCmd.PersistentFlags().BoolP("pgo", "o", false, "Enables profile-guided optimization (PGO) output")
 }
