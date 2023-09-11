@@ -13,6 +13,7 @@ type FileArray[T serialization.Serializer[T]] struct {
 	header      Header
 	memoryMap   mmap.MMap
 	backingFile *os.File
+	count       serialization.Length
 }
 
 // NewFileArray initializes a new FileArray instance.
@@ -50,6 +51,8 @@ func NewFileArray[T serialization.Serializer[T]](filename string) (*FileArray[T]
 	if err != nil {
 		return nil, err
 	}
+
+	fileArray.loadCount()
 
 	return fileArray, nil
 }
@@ -105,16 +108,27 @@ func openMmap(file *os.File) (mmap.MMap, error) {
 
 // Count returns the current count of elements stored in the FileArray instance.
 func (fileArray *FileArray[T]) Count() serialization.Length {
-	counterSlice := fileArray.getCounterSlice()
-	count := binary.BigEndian.Uint64(counterSlice)
-	return serialization.Length(count)
+	return fileArray.count
 }
 
 // setCount sets the count of elements in the FileArray to the specified value.
 func (fileArray *FileArray[T]) setCount(value serialization.Length) {
 
+	fileArray.count = value
+}
+
+// setCount sets the count of elements in the FileArray to the specified value.
+func (fileArray *FileArray[T]) saveCount() {
+
 	counterSlice := fileArray.getCounterSlice()
-	binary.BigEndian.PutUint64(counterSlice, uint64(value))
+	binary.BigEndian.PutUint64(counterSlice, uint64(fileArray.count))
+}
+
+// setCount sets the count of elements in the FileArray to the specified value.
+func (fileArray *FileArray[T]) loadCount() {
+	counterSlice := fileArray.getCounterSlice()
+	count := binary.BigEndian.Uint64(counterSlice)
+	fileArray.count = serialization.Length(count)
 }
 
 // incrementCount increments the count of elements in the FileArray by one.
@@ -241,6 +255,8 @@ func (fileArray *FileArray[T]) hasSpace(dataSize uint64) bool {
 //   - error: An error if unmap or file close operations fail.
 func (fileArray *FileArray[T]) Close() error {
 	var err error
+
+	fileArray.saveCount()
 
 	if fileArray.memoryMap != nil {
 		err = fileArray.memoryMap.Unmap()
