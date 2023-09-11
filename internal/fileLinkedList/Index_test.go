@@ -2,7 +2,6 @@ package fileLinkedList
 
 import (
 	"awesomeProject/internal/serialization"
-	"bytes"
 	"encoding/binary"
 	"testing"
 )
@@ -15,14 +14,14 @@ func TestIndexSerialization(t *testing.T) {
 	index := newIndexEntry(itemID, offset, length)
 
 	// Serialize the indexEntry
-	var buffer bytes.Buffer
-	err := index.SerializeToBinaryStream(&buffer)
+	var buffer []byte
+	err := index.SerializeToBinaryStream(buffer)
 	if err != nil {
 		t.Fatalf("Serialization failed: %v", err)
 	}
 
 	// Deserialize the serialized data
-	deserializedIndex, err := index.DeserializeFromBinaryStream(&buffer)
+	deserializedIndex, err := index.DeserializeFromBinaryStream(buffer)
 	if err != nil {
 		t.Fatalf("Deserialization failed: %v", err)
 	}
@@ -38,9 +37,7 @@ func TestIndexDeserializationErrors(t *testing.T) {
 	invalidData := []byte{1, 2} // Incomplete data, missing the 'length' field
 
 	// Attempt to deserialize the invalid data
-	var buffer bytes.Buffer
-	buffer.Write(invalidData)
-	_, err := indexEntry{}.DeserializeFromBinaryStream(&buffer)
+	_, err := indexEntry{}.DeserializeFromBinaryStream(invalidData)
 
 	// Check if deserialization returned an error (as expected)
 	if err == nil {

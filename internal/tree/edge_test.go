@@ -2,7 +2,6 @@ package tree
 
 import (
 	"awesomeProject/internal/serialization"
-	"bytes"
 	"testing"
 )
 
@@ -12,14 +11,14 @@ func TestEdgeSerializeDeserialize(t *testing.T) {
 		Distance:   12,
 	}
 
-	var buffer bytes.Buffer
-	err := edge1.SerializeToBinaryStream(&buffer)
+	buffer := make([]byte, edge1.StrideLength())
+	err := edge1.SerializeToBinaryStream(buffer)
 	if err != nil {
 		t.Fatalf("Failed to serialize edge: %v", err)
 	}
 
 	var edge2 edge
-	edge2, err = edge2.DeserializeFromBinaryStream(&buffer)
+	edge2, err = edge2.DeserializeFromBinaryStream(buffer)
 
 	if err != nil {
 		t.Fatalf("Failed to deserialize edge: %v", err)
@@ -43,19 +42,19 @@ func TestEdgeSerializedSize(t *testing.T) {
 
 	size := edge.StrideLength()
 
-	var buffer bytes.Buffer
-	err := edge.SerializeToBinaryStream(&buffer)
+	buffer := make([]byte, edge.StrideLength())
+	err := edge.SerializeToBinaryStream(buffer)
 	if err != nil {
 		t.Fatalf("Failed to serialize edge: %v", err)
 	}
 
-	if size != serialization.Length(len(buffer.Bytes())) {
-		t.Fatalf("StrideLength() did not return the correct size. Got %d, expected %d", size, len(buffer.Bytes()))
+	if size != serialization.Length(len(buffer)) {
+		t.Fatalf("StrideLength() did not return the correct size. Got %d, expected %d", size, len(buffer))
 	}
 }
 
 func TestNewEdge(t *testing.T) {
-	edge := NewEdge(43, 12)
+	edge := newEdge(43, 12)
 
 	if edge.ChildIndex != 43 {
 		t.Fatalf("ChildIndex did not match. Got %d, expected %d", edge.ChildIndex, 43)

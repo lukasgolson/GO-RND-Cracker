@@ -57,7 +57,7 @@ func (tree *Tree) addNode(data [32]byte, seed int32) (serialization.Offset, erro
 }
 
 func (tree *Tree) addEdge(parentIndex, childIndex serialization.Offset, distance uint32) error {
-	newEdge := NewEdge(childIndex, distance)
+	newEdge := newEdge(childIndex, distance)
 
 	err := tree.edges.Add(parentIndex, *newEdge)
 	if err != nil {

@@ -182,9 +182,8 @@ func (list *FileLinkedList[T]) Remove(listID serialization.Offset, indexItem T) 
 		return fmt.Errorf("list does not exist")
 	}
 
-	var indexBuffer bytes.Buffer
-
-	err = indexItem.SerializeToBinaryStream(&indexBuffer)
+	indexBuffer := make([]byte, indexItem.StrideLength())
+	err = indexItem.SerializeToBinaryStream(indexBuffer)
 	if err != nil {
 		return err
 	}
@@ -204,14 +203,14 @@ func (list *FileLinkedList[T]) Remove(listID serialization.Offset, indexItem T) 
 
 		nextOffset = item.NextOffset
 
-		var itemBuffer bytes.Buffer
-		err = item.Item.SerializeToBinaryStream(&itemBuffer)
+		itemBuffer := make([]byte, item.StrideLength())
+		err = item.Item.SerializeToBinaryStream(itemBuffer)
 
 		if err != nil {
 			return err
 		}
 
-		if bytes.Equal(indexBuffer.Bytes(), itemBuffer.Bytes()) {
+		if bytes.Equal(indexBuffer, itemBuffer) {
 
 			if currentOffset == indexEntry.offset {
 
@@ -269,8 +268,8 @@ func (list *FileLinkedList[T]) Contains(listID serialization.Offset, item T) (bo
 		return false, fmt.Errorf("list does not exist")
 	}
 
-	itemBuffer := bytes.Buffer{}
-	err = item.SerializeToBinaryStream(&itemBuffer)
+	itemBuffer := make([]byte, item.StrideLength())
+	err = item.SerializeToBinaryStream(itemBuffer)
 	if err != nil {
 		return false, err
 	}
@@ -279,20 +278,21 @@ func (list *FileLinkedList[T]) Contains(listID serialization.Offset, item T) (bo
 
 	for nextOffset != serialization.MaxOffset() {
 
-		item, err := list.elementsArray.GetItemFromIndex(nextOffset)
+		currentItem, err := list.elementsArray.GetItemFromIndex(nextOffset)
 		if err != nil {
 			return false, err
 		}
 
-		nextOffset = item.NextOffset
+		nextOffset = currentItem.NextOffset
 
-		currentItemBuffer := bytes.Buffer{}
-		err = item.Item.SerializeToBinaryStream(&currentItemBuffer)
+		currentItemBuffer := make([]byte, currentItem.Item.StrideLength())
+
+		err = currentItem.Item.SerializeToBinaryStream(currentItemBuffer)
 		if err != nil {
 			return false, err
 		}
 
-		if bytes.Equal(itemBuffer.Bytes(), currentItemBuffer.Bytes()) {
+		if bytes.Equal(itemBuffer, currentItemBuffer) {
 			return true, nil
 		}
 
