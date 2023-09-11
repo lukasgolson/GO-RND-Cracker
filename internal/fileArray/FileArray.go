@@ -10,8 +10,8 @@ import (
 )
 
 type FileArray[T serialization.Serializer[T]] struct {
-	header      Header
 	memoryMap   mmap.MMap
+	header      Header
 	backingFile *os.File
 	count       serialization.Length
 }

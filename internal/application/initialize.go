@@ -19,11 +19,6 @@ func processPartition(lo, hi, fileCount int64, graphPath string, randSource *ran
 
 	seedsPerFile := numberOfSeeds / fileCount
 
-	err := os.MkdirAll(graphPath, os.ModePerm)
-	if err != nil {
-		return err
-	}
-
 	for fileIndex := int64(0); fileIndex < fileCount; fileIndex++ {
 		var bkTree, err = tree.NewOrLoad(graphPath)
 		if err != nil {
@@ -58,10 +53,6 @@ func processPartition(lo, hi, fileCount int64, graphPath string, randSource *ran
 		} else {
 			fmt.Println("No existing tree found. Creating new tree... Start seed", startSeed, "end seed:", endSeed)
 
-			err := bkTree.PreExpand(serialization.Length(numberOfSeeds))
-			if err != nil {
-				return err
-			}
 		}
 
 		for seed := startSeed; seed < endSeed; seed++ {
@@ -110,7 +101,6 @@ func Initialize(coreCount int, fileCount int, seedCount int64, dataDirectories [
 	for p := int64(0); p < int64(coreCount); p++ {
 		lo := partitionSize * p
 		hi := partitionSize * (p + 1)
-		fmt.Printf("Processing partition %d (%d, %d)\n", p, lo, hi)
 
 		dirIndex := int(p) / partitionsPerDirectory
 		dataDirectory := dataDirectories[dirIndex]
@@ -120,7 +110,7 @@ func Initialize(coreCount int, fileCount int, seedCount int64, dataDirectories [
 		go func(lo, hi int64, partitionID int64) {
 			defer wg.Done()
 			randSource := rand.New(rand.NewSource(0))
-			subdir := fmt.Sprintf("%s/partition-%d", dataDirectory, p)
+			subdir := fmt.Sprintf("%s/graph-%d", dataDirectory, p)
 
 			if err := processPartition(lo, hi, filesPerPartition, subdir, randSource); err != nil {
 				log.Printf("Error processing partition: %v\n", err)

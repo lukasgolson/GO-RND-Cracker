@@ -196,15 +196,15 @@ func (list *FileLinkedList[T]) Remove(listID serialization.Offset, indexItem T) 
 
 		currentOffset = nextOffset
 
-		item, err := list.elementsArray.GetItemFromIndex(nextOffset)
+		currentElement, err := list.elementsArray.GetItemFromIndex(nextOffset)
 		if err != nil {
 			return err
 		}
 
-		nextOffset = item.NextOffset
+		nextOffset = currentElement.NextOffset
 
-		itemBuffer := make([]byte, item.StrideLength())
-		err = item.Item.SerializeToBinaryStream(itemBuffer)
+		itemBuffer := make([]byte, currentElement.Item.StrideLength())
+		err = currentElement.Item.SerializeToBinaryStream(itemBuffer)
 
 		if err != nil {
 			return err
@@ -246,7 +246,7 @@ func (list *FileLinkedList[T]) Remove(listID serialization.Offset, indexItem T) 
 		previousOffset = currentOffset
 
 		if nextOffset == serialization.MaxOffset() {
-			return fmt.Errorf("item not found")
+			return fmt.Errorf("currentElement not found")
 		}
 
 	}

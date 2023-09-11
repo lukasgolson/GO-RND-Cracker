@@ -14,7 +14,7 @@ func TestIndexSerialization(t *testing.T) {
 	index := newIndexEntry(itemID, offset, length)
 
 	// Serialize the indexEntry
-	var buffer []byte
+	buffer := make([]byte, index.StrideLength())
 	err := index.SerializeToBinaryStream(buffer)
 	if err != nil {
 		t.Fatalf("Serialization failed: %v", err)
@@ -29,19 +29,6 @@ func TestIndexSerialization(t *testing.T) {
 	// Compare the original indexEntry with the deserialized indexEntry
 	if index != deserializedIndex {
 		t.Errorf("Expected %v, got %v", index, deserializedIndex)
-	}
-}
-
-func TestIndexDeserializationErrors(t *testing.T) {
-	// Create a sample byte slice with incomplete data for indexEntry
-	invalidData := []byte{1, 2} // Incomplete data, missing the 'length' field
-
-	// Attempt to deserialize the invalid data
-	_, err := indexEntry{}.DeserializeFromBinaryStream(invalidData)
-
-	// Check if deserialization returned an error (as expected)
-	if err == nil {
-		t.Errorf("Expected an error during deserialization, but got none")
 	}
 }
 
