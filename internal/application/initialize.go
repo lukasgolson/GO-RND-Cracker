@@ -86,8 +86,6 @@ func Initialize(coreCount int, fileCount int, seedCount int64, dataDirectories [
 		return fmt.Errorf("file count must be greater than or equal to the core count")
 	}
 
-	partitionsPerDirectory := coreCount / len(dataDirectories)
-
 	for _, dir := range dataDirectories {
 		err := os.MkdirAll(dir, os.ModePerm)
 		if err != nil {
@@ -105,7 +103,7 @@ func Initialize(coreCount int, fileCount int, seedCount int64, dataDirectories [
 		lo := partitionSize * p
 		hi := partitionSize * (p + 1)
 
-		dirIndex := int(p) / partitionsPerDirectory
+		dirIndex := int(p) % len(dataDirectories)
 		dataDirectory := dataDirectories[dirIndex]
 
 		wg.Add(1)
