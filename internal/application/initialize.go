@@ -9,7 +9,7 @@ import (
 	"sync"
 )
 
-func processPartition(lo, hi, fileCount int64, directory string, randSource *rand.Rand) error {
+func processPartition(lo, hi, fileCount int64, graphPath string, randSource *rand.Rand) error {
 	totalSeeds := hi - lo
 
 	if fileCount > totalSeeds {
@@ -18,7 +18,7 @@ func processPartition(lo, hi, fileCount int64, directory string, randSource *ran
 
 	seedsPerFile := totalSeeds / fileCount
 
-	err := os.MkdirAll(directory, os.ModePerm)
+	err := os.MkdirAll(graphPath, os.ModePerm)
 	if err != nil {
 		return err
 	}
@@ -27,8 +27,7 @@ func processPartition(lo, hi, fileCount int64, directory string, randSource *ran
 		startSeed := lo + (fileIndex * seedsPerFile)
 		endSeed := startSeed + seedsPerFile
 
-		treeDir := fmt.Sprintf("%s/graph-%d", directory, fileIndex)
-		var bktree, err = tree.New(treeDir)
+		var bktree, err = tree.New(graphPath)
 		if err != nil {
 			return err
 		}
@@ -51,7 +50,7 @@ func processPartition(lo, hi, fileCount int64, directory string, randSource *ran
 	return nil
 }
 
-func Initialize(coreCount int, fileCount int, seedCount int64, dataDirectory string) error {
+func Initialize(coreCount int, fileCount int, seedCount int64, dataDirectories []string) error {
 
 	if fileCount < 1 {
 		return fmt.Errorf("file count must be at least 1")
@@ -61,9 +60,13 @@ func Initialize(coreCount int, fileCount int, seedCount int64, dataDirectory str
 		return fmt.Errorf("file count must be greater than or equal to the core count")
 	}
 
-	err := os.MkdirAll(dataDirectory, os.ModePerm)
-	if err != nil {
-		return err
+	partitionsPerDirectory := coreCount / len(dataDirectories)
+
+	for _, dir := range dataDirectories {
+		err := os.MkdirAll(dir, os.ModePerm)
+		if err != nil {
+			return err
+		}
 	}
 
 	var wg sync.WaitGroup
@@ -77,12 +80,15 @@ func Initialize(coreCount int, fileCount int, seedCount int64, dataDirectory str
 		hi := partitionSize * (p + 1)
 		fmt.Printf("Processing partition %d (%d, %d)\n", p, lo, hi)
 
+		dirIndex := int(p) / partitionsPerDirectory
+		dataDirectory := dataDirectories[dirIndex]
+
 		wg.Add(1)
 
 		go func(lo, hi int64, partitionID int64) {
 			defer wg.Done()
 			randSource := rand.New(rand.NewSource(0))
-			subdir := fmt.Sprintf("%s/partition-%d", dataDirectory, partitionID)
+			subdir := fmt.Sprintf("%d/partition-%d", dataDirectory, p)
 
 			if err := processPartition(lo, hi, filesPerPartition, subdir, randSource); err != nil {
 				log.Printf("Error processing partition: %v\n", err)
