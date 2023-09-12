@@ -18,11 +18,17 @@ type SeedDistance struct {
 }
 
 // Search performs a search operation on a set of trees.
-func Search(inputFile string, delimiter string) error {
+func Search(inputFile string, delimiter string, dataDirectories []string) error {
 
-	trees, err := findNodesFiles("data")
-	if err != nil {
-		return err
+	allTrees := make([]string, 0)
+
+	for _, path := range dataDirectories {
+		trees, err := findNodesFiles(path)
+		if err != nil {
+			return err
+		}
+
+		allTrees = append(allTrees, trees...)
 	}
 
 	parsedValues, err := readFileAndParse(inputFile, delimiter, 0, 100)
@@ -34,7 +40,7 @@ func Search(inputFile string, delimiter string) error {
 	resultsChan := make(chan []SeedDistance)
 
 	// Perform search in parallel for each tree.
-	for _, treePath := range trees {
+	for _, treePath := range allTrees {
 		wg.Add(1)
 		go func(path string) {
 			defer wg.Done()
