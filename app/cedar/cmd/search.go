@@ -43,6 +43,15 @@ var searchCmd = &cobra.Command{
 
 		isCSV, err := cmd.Flags().GetBool("csv")
 
+		if err != nil {
+			panic(err)
+		}
+
+		directory, err := cmd.Flags().GetStringArray("directory")
+		if err != nil {
+			panic(err)
+		}
+
 		var deliminator string
 
 		if isCSV {
@@ -60,7 +69,7 @@ var searchCmd = &cobra.Command{
 
 		}
 
-		err = application.Search(inputFile, deliminator)
+		err = application.Search(inputFile, deliminator, directory)
 		if err != nil {
 			panic(err)
 		}
@@ -83,4 +92,6 @@ func init() {
 
 	searchCmd.Flags().StringP("input", "i", "numbers.txt", "The input file containing the sequence to search for")
 	searchCmd.Flags().BoolP("csv", "e", false, "The input file is CSV deliminated")
+	searchCmd.Flags().StringArrayP("directory", "d", []string{"data"}, "The directories to store the lookup graphs in")
+
 }
