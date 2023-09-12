@@ -1,6 +1,7 @@
 package application
 
 import (
+	"awesomeProject/internal/serialization"
 	"awesomeProject/internal/tree"
 	"fmt"
 	"log"
@@ -9,40 +10,64 @@ import (
 	"sync"
 )
 
-func processPartition(lo, hi, fileCount int64, directory string, randSource *rand.Rand) error {
-	totalSeeds := hi - lo
+func processPartition(lo, hi, fileCount int64, graphPath string, randSource *rand.Rand) error {
+	numberOfSeeds := hi - lo
 
-	if fileCount > totalSeeds {
-		fileCount = totalSeeds
+	if fileCount > numberOfSeeds {
+		fileCount = numberOfSeeds
 	}
 
-	seedsPerFile := totalSeeds / fileCount
-
-	err := os.MkdirAll(directory, os.ModePerm)
-	if err != nil {
-		return err
-	}
+	seedsPerFile := numberOfSeeds / fileCount
 
 	for fileIndex := int64(0); fileIndex < fileCount; fileIndex++ {
-		startSeed := lo + (fileIndex * seedsPerFile)
-		endSeed := startSeed + seedsPerFile
-
-		treeDir := fmt.Sprintf("%s/graph-%d", directory, fileIndex)
-		var bktree, err = tree.New(treeDir)
+		var bkTree, err = tree.NewOrLoad(graphPath)
 		if err != nil {
 			return err
 		}
+		startSeed := lo + (fileIndex * seedsPerFile)
+		endSeed := startSeed + seedsPerFile
+		loadedSeedPosition := serialization.Length(lo) + bkTree.Length()
 
-		for seed := startSeed; seed < endSeed; seed++ {
-			sequence := GenerateRandomSequence(seed, 32, randSource)
+		if bkTree.Length() > 0 {
+			fmt.Println("Loading existing tree... Start seed", startSeed, "end seed:", endSeed, "previous end seed:", loadedSeedPosition)
 
-			err := bktree.Add([32]byte(sequence), int32(seed))
+			if loadedSeedPosition > serialization.Length(startSeed) && loadedSeedPosition < serialization.Length(endSeed) {
+
+				fmt.Println("Previous tree is in range. Everything is fine.")
+
+				const seedOverlap = 5
+
+				newStartSeed := int64(loadedSeedPosition) - seedOverlap
+
+				if newStartSeed < startSeed {
+					newStartSeed = startSeed
+				}
+
+				startSeed = newStartSeed
+
+			} else if loadedSeedPosition < serialization.Length(startSeed) {
+				return fmt.Errorf("previous tree ends before our start seed")
+			} else if loadedSeedPosition > serialization.Length(endSeed) {
+				return fmt.Errorf("previous tree ends after our end seed")
+			}
+		} else {
+			fmt.Println("No existing tree found. Creating new tree with name", graphPath, "... Start seed", startSeed, "end seed:", endSeed)
+			err := bkTree.PreExpand(serialization.Length(numberOfSeeds))
 			if err != nil {
 				return err
 			}
 		}
 
-		err = bktree.ShrinkWrap()
+		for seed := startSeed; seed < endSeed; seed++ {
+			sequence := GenerateRandomSequence(seed, 32, randSource)
+
+			err := bkTree.Add([32]byte(sequence), int32(seed))
+			if err != nil {
+				return err
+			}
+		}
+
+		err = bkTree.ShrinkWrap()
 		if err != nil {
 			return err
 		}
@@ -51,7 +76,7 @@ func processPartition(lo, hi, fileCount int64, directory string, randSource *ran
 	return nil
 }
 
-func Initialize(coreCount int, fileCount int, seedCount int64, dataDirectory string) error {
+func Initialize(coreCount int, fileCount int, seedCount int64, dataDirectories []string) error {
 
 	if fileCount < 1 {
 		return fmt.Errorf("file count must be at least 1")
@@ -61,9 +86,11 @@ func Initialize(coreCount int, fileCount int, seedCount int64, dataDirectory str
 		return fmt.Errorf("file count must be greater than or equal to the core count")
 	}
 
-	err := os.MkdirAll(dataDirectory, os.ModePerm)
-	if err != nil {
-		return err
+	for _, dir := range dataDirectories {
+		err := os.MkdirAll(dir, os.ModePerm)
+		if err != nil {
+			return err
+		}
 	}
 
 	var wg sync.WaitGroup
@@ -75,16 +102,18 @@ func Initialize(coreCount int, fileCount int, seedCount int64, dataDirectory str
 	for p := int64(0); p < int64(coreCount); p++ {
 		lo := partitionSize * p
 		hi := partitionSize * (p + 1)
-		fmt.Printf("Processing partition %d (%d, %d)\n", p, lo, hi)
+
+		dirIndex := int(p) % len(dataDirectories)
+		dataDirectory := dataDirectories[dirIndex]
 
 		wg.Add(1)
 
 		go func(lo, hi int64, partitionID int64) {
 			defer wg.Done()
 			randSource := rand.New(rand.NewSource(0))
-			subdir := fmt.Sprintf("%s/partition-%d", dataDirectory, partitionID)
+			dir := fmt.Sprintf("%s/graph-%d", dataDirectory, partitionID)
 
-			if err := processPartition(lo, hi, filesPerPartition, subdir, randSource); err != nil {
+			if err := processPartition(lo, hi, filesPerPartition, dir, randSource); err != nil {
 				log.Printf("Error processing partition: %v\n", err)
 			}
 		}(lo, hi, p)

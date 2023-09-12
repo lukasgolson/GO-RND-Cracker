@@ -2,7 +2,6 @@ package fileLinkedList
 
 import (
 	"awesomeProject/internal/serialization"
-	"bytes"
 	"encoding/binary"
 	"testing"
 )
@@ -15,14 +14,14 @@ func TestIndexSerialization(t *testing.T) {
 	index := newIndexEntry(itemID, offset, length)
 
 	// Serialize the indexEntry
-	var buffer bytes.Buffer
-	err := index.SerializeToBinaryStream(&buffer)
+	buffer := make([]byte, index.StrideLength())
+	err := index.SerializeToBinaryStream(buffer)
 	if err != nil {
 		t.Fatalf("Serialization failed: %v", err)
 	}
 
 	// Deserialize the serialized data
-	deserializedIndex, err := index.DeserializeFromBinaryStream(&buffer)
+	deserializedIndex, err := index.DeserializeFromBinaryStream(buffer)
 	if err != nil {
 		t.Fatalf("Deserialization failed: %v", err)
 	}
@@ -30,21 +29,6 @@ func TestIndexSerialization(t *testing.T) {
 	// Compare the original indexEntry with the deserialized indexEntry
 	if index != deserializedIndex {
 		t.Errorf("Expected %v, got %v", index, deserializedIndex)
-	}
-}
-
-func TestIndexDeserializationErrors(t *testing.T) {
-	// Create a sample byte slice with incomplete data for indexEntry
-	invalidData := []byte{1, 2} // Incomplete data, missing the 'length' field
-
-	// Attempt to deserialize the invalid data
-	var buffer bytes.Buffer
-	buffer.Write(invalidData)
-	_, err := indexEntry{}.DeserializeFromBinaryStream(&buffer)
-
-	// Check if deserialization returned an error (as expected)
-	if err == nil {
-		t.Errorf("Expected an error during deserialization, but got none")
 	}
 }
 

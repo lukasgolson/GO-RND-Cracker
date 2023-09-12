@@ -182,9 +182,8 @@ func (list *FileLinkedList[T]) Remove(listID serialization.Offset, indexItem T) 
 		return fmt.Errorf("list does not exist")
 	}
 
-	var indexBuffer bytes.Buffer
-
-	err = indexItem.SerializeToBinaryStream(&indexBuffer)
+	indexBuffer := make([]byte, indexItem.StrideLength())
+	err = indexItem.SerializeToBinaryStream(indexBuffer)
 	if err != nil {
 		return err
 	}
@@ -197,21 +196,21 @@ func (list *FileLinkedList[T]) Remove(listID serialization.Offset, indexItem T) 
 
 		currentOffset = nextOffset
 
-		item, err := list.elementsArray.GetItemFromIndex(nextOffset)
+		currentElement, err := list.elementsArray.GetItemFromIndex(nextOffset)
 		if err != nil {
 			return err
 		}
 
-		nextOffset = item.NextOffset
+		nextOffset = currentElement.NextOffset
 
-		var itemBuffer bytes.Buffer
-		err = item.Item.SerializeToBinaryStream(&itemBuffer)
+		itemBuffer := make([]byte, currentElement.Item.StrideLength())
+		err = currentElement.Item.SerializeToBinaryStream(itemBuffer)
 
 		if err != nil {
 			return err
 		}
 
-		if bytes.Equal(indexBuffer.Bytes(), itemBuffer.Bytes()) {
+		if bytes.Equal(indexBuffer, itemBuffer) {
 
 			if currentOffset == indexEntry.offset {
 
@@ -247,7 +246,7 @@ func (list *FileLinkedList[T]) Remove(listID serialization.Offset, indexItem T) 
 		previousOffset = currentOffset
 
 		if nextOffset == serialization.MaxOffset() {
-			return fmt.Errorf("item not found")
+			return fmt.Errorf("currentElement not found")
 		}
 
 	}
@@ -269,8 +268,8 @@ func (list *FileLinkedList[T]) Contains(listID serialization.Offset, item T) (bo
 		return false, fmt.Errorf("list does not exist")
 	}
 
-	itemBuffer := bytes.Buffer{}
-	err = item.SerializeToBinaryStream(&itemBuffer)
+	itemBuffer := make([]byte, item.StrideLength())
+	err = item.SerializeToBinaryStream(itemBuffer)
 	if err != nil {
 		return false, err
 	}
@@ -279,20 +278,21 @@ func (list *FileLinkedList[T]) Contains(listID serialization.Offset, item T) (bo
 
 	for nextOffset != serialization.MaxOffset() {
 
-		item, err := list.elementsArray.GetItemFromIndex(nextOffset)
+		currentItem, err := list.elementsArray.GetItemFromIndex(nextOffset)
 		if err != nil {
 			return false, err
 		}
 
-		nextOffset = item.NextOffset
+		nextOffset = currentItem.NextOffset
 
-		currentItemBuffer := bytes.Buffer{}
-		err = item.Item.SerializeToBinaryStream(&currentItemBuffer)
+		currentItemBuffer := make([]byte, currentItem.Item.StrideLength())
+
+		err = currentItem.Item.SerializeToBinaryStream(currentItemBuffer)
 		if err != nil {
 			return false, err
 		}
 
-		if bytes.Equal(itemBuffer.Bytes(), currentItemBuffer.Bytes()) {
+		if bytes.Equal(itemBuffer, currentItemBuffer) {
 			return true, nil
 		}
 
@@ -324,8 +324,11 @@ func (list *FileLinkedList[T]) GetFileName() (string, string) {
 
 func (list *FileLinkedList[T]) Close() error {
 
-	list.elementsArray.Close()
-	list.indexArray.Close()
+	err := list.elementsArray.Close()
+	err = list.indexArray.Close()
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -337,6 +340,24 @@ func (list *FileLinkedList[T]) ShrinkWrap() error {
 		return err
 	}
 	err = list.indexArray.ShrinkWrap()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (list *FileLinkedList[T]) ExpandElements(length serialization.Length) error {
+	err := list.elementsArray.Expand(length)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (list *FileLinkedList[T]) ExpandIndex(length serialization.Length) error {
+	err := list.indexArray.Expand(length)
 	if err != nil {
 		return err
 	}

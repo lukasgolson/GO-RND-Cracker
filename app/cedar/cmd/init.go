@@ -53,7 +53,7 @@ Note that this command will take a long time to complete, and will use a lot of 
 			panic(err)
 		}
 
-		directory, err := cmd.Flags().GetString("directory")
+		directory, err := cmd.Flags().GetStringArray("directory")
 		if err != nil {
 			panic(err)
 		}
@@ -80,5 +80,5 @@ func init() {
 
 	initCmd.Flags().IntP("files", "f", runtime.NumCPU(), "Number of file partitions to split the seed space into")
 	initCmd.Flags().Int64P("seedCount", "s", 1<<31-1, "Upper bound on the number of seeds to generate")
-	initCmd.Flags().String("directory", "data", "The directory to store the lookup graphs in")
+	initCmd.Flags().StringArrayP("directory", "d", []string{"data"}, "The directories to store the lookup graphs in")
 }

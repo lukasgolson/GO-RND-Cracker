@@ -2,7 +2,6 @@ package fileArray
 
 import (
 	"awesomeProject/internal/serialization"
-	"bytes"
 	"fmt"
 )
 
@@ -41,14 +40,6 @@ func (fileArray *FileArray[T]) SetItemAtIndex(item T, index serialization.Offset
 		return fmt.Errorf("index out of bounds. Max index %d", fileArray.Count())
 	}
 
-	var buffer bytes.Buffer
-	err := (item).SerializeToBinaryStream(&buffer)
-	if err != nil {
-		return err
-	}
-
-	serializedItem := buffer.Bytes()
-
 	arraySize := serializationSize * (index + 1)
 
 	stallCounter := 0
@@ -68,7 +59,10 @@ func (fileArray *FileArray[T]) SetItemAtIndex(item T, index serialization.Offset
 
 	slice := fileArray.getDataSlice()
 
-	copy(slice[memoryLocation:memoryLocation+serializationSize], serializedItem)
+	err := (item).SerializeToBinaryStream(slice[memoryLocation : memoryLocation+serializationSize])
+	if err != nil {
+		return err
+	}
 
 	if index >= fileArray.Count() {
 		fileArray.setCount(index + 1)
@@ -100,12 +94,7 @@ func (fileArray *FileArray[T]) GetItemFromIndex(index serialization.Offset) (T, 
 
 	slice := fileArray.getDataSlice()
 
-	var buffer bytes.Buffer
-	serializedItem := make([]byte, serializedSize)
-	copy(serializedItem, slice[memoryLocation:memoryLocation+serializedSize])
-	buffer.Write(serializedItem)
-
-	item, err = item.DeserializeFromBinaryStream(&buffer)
+	item, err = item.DeserializeFromBinaryStream(slice[memoryLocation : memoryLocation+serializedSize])
 	if err != nil {
 		return item, err
 	}

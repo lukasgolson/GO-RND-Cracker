@@ -3,7 +3,6 @@ package fileLinkedList
 import (
 	"awesomeProject/internal/serialization"
 	"encoding/binary"
-	"io"
 )
 
 type indexEntry struct {
@@ -16,53 +15,26 @@ func newIndexEntry(itemID serialization.Offset, offset serialization.Offset, len
 	return indexEntry{itemID: itemID, offset: offset, length: length}
 }
 
-func (i indexEntry) SerializeToBinaryStream(writer io.Writer) error {
-	err := binary.Write(writer, binary.LittleEndian, i.itemID)
+func (i indexEntry) SerializeToBinaryStream(buf []byte) error {
 
-	if err != nil {
-		return err
-	}
-
-	err = binary.Write(writer, binary.LittleEndian, i.offset)
-
-	if err != nil {
-		return err
-	}
-
-	err = binary.Write(writer, binary.LittleEndian, i.length)
-
-	if err != nil {
-		return err
-	}
+	binary.LittleEndian.PutUint64(buf[0:8], uint64(i.itemID))   // Convert int64 to little-endian binary and put it in the buffer
+	binary.LittleEndian.PutUint64(buf[8:16], uint64(i.offset))  // Convert int64 to little-endian binary and put it in the buffer
+	binary.LittleEndian.PutUint64(buf[16:24], uint64(i.length)) // Convert int64 to little-endian binary and put it in the buffer
 
 	return nil
 }
 
-func (i indexEntry) DeserializeFromBinaryStream(reader io.Reader) (indexEntry, error) {
+func (i indexEntry) DeserializeFromBinaryStream(buf []byte) (indexEntry, error) {
 
-	err := binary.Read(reader, binary.LittleEndian, &i.itemID)
-
-	if err != nil {
-		return i, err
-	}
-
-	err = binary.Read(reader, binary.LittleEndian, &i.offset)
-
-	if err != nil {
-		return i, err
-	}
-
-	err = binary.Read(reader, binary.LittleEndian, &i.length)
-
-	if err != nil {
-		return i, err
-	}
+	i.itemID = serialization.Offset(binary.LittleEndian.Uint64(buf[0:8]))   // Read the little-endian binary from the buffer and convert to offset
+	i.offset = serialization.Offset(binary.LittleEndian.Uint64(buf[8:16]))  // Read the little-endian binary from the buffer and convert to offset
+	i.length = serialization.Length(binary.LittleEndian.Uint64(buf[16:24])) // Read the little-endian binary from the buffer and convert to offset
 
 	return i, nil
 }
 
 func (i indexEntry) StrideLength() serialization.Length {
-	return serialization.Length(binary.Size(i.itemID) + binary.Size(i.offset) + binary.Size(i.length))
+	return 8 + 8 + 8
 }
 
 func (i indexEntry) IDByte() byte {

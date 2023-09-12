@@ -2,7 +2,6 @@ package tree
 
 import (
 	"awesomeProject/internal/serialization"
-	"bytes"
 	"testing"
 )
 
@@ -13,14 +12,14 @@ func TestNodeSerializeDeserialize(t *testing.T) {
 		Seed: 12,
 	}
 
-	var buffer bytes.Buffer
-	err := node1.SerializeToBinaryStream(&buffer)
+	buffer := make([]byte, node1.StrideLength())
+	err := node1.SerializeToBinaryStream(buffer)
 	if err != nil {
 		t.Fatalf("Failed to serialize node: %v", err)
 	}
 
 	var node2 node
-	node2, err = node2.DeserializeFromBinaryStream(&buffer)
+	node2, err = node2.DeserializeFromBinaryStream(buffer)
 
 	if err != nil {
 		t.Fatalf("Failed to deserialize node: %v", err)
@@ -48,14 +47,14 @@ func TestNodeSerializedSize(t *testing.T) {
 
 	size := node.StrideLength()
 
-	var buffer bytes.Buffer
-	err := node.SerializeToBinaryStream(&buffer)
+	buffer := make([]byte, node.StrideLength())
+	err := node.SerializeToBinaryStream(buffer)
 	if err != nil {
 		t.Fatalf("Failed to serialize node: %v", err)
 	}
 
-	if size != serialization.Length(len(buffer.Bytes())) {
-		t.Fatalf("StrideLength() did not return the correct size. Got %d, expected %d", size, len(buffer.Bytes()))
+	if size != serialization.Length(len(buffer)) {
+		t.Fatalf("StrideLength() did not return the correct size. Got %d, expected %d", size, len(buffer))
 	}
 
 	println("node serialized size:", size)

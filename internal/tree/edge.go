@@ -3,7 +3,6 @@ package tree
 import (
 	"awesomeProject/internal/serialization"
 	"encoding/binary"
-	"io"
 )
 
 type edge struct {
@@ -11,50 +10,31 @@ type edge struct {
 	Distance   uint32
 }
 
-func NewEdge(parentIndex serialization.Offset, childIndex serialization.Offset, distance uint32) *edge {
+func newEdge(childIndex serialization.Offset, distance uint32) *edge {
 	return &edge{
 		ChildIndex: childIndex,
 		Distance:   distance,
 	}
 }
 
-func (e edge) SerializeToBinaryStream(writer io.Writer) error {
+func (e edge) SerializeToBinaryStream(buf []byte) error {
 
-	err := binary.Write(writer, binary.LittleEndian, e.ChildIndex)
-	if err != nil {
-		return err
-	}
-
-	err = binary.Write(writer, binary.LittleEndian, e.Distance)
-	if err != nil {
-		return err
-	}
+	binary.LittleEndian.PutUint64(buf[0:8], uint64(e.ChildIndex)) // Convert int64 to little-endian binary and put it in the buffer
+	binary.LittleEndian.PutUint32(buf[8:12], e.Distance)          // Convert uint32 to little-endian binary and put it in the buffer
 
 	return nil
 }
 
-func (e edge) DeserializeFromBinaryStream(reader io.Reader) (edge, error) {
+func (e edge) DeserializeFromBinaryStream(buf []byte) (edge, error) {
 
-	var childIndex serialization.Offset
-	err := binary.Read(reader, binary.LittleEndian, &childIndex)
-	if err != nil {
-		return e, err
-	}
-
-	var distance uint32
-	err = binary.Read(reader, binary.LittleEndian, &distance)
-	if err != nil {
-		return e, err
-	}
-
-	e.ChildIndex = childIndex
-	e.Distance = distance
+	e.ChildIndex = serialization.Offset(binary.LittleEndian.Uint64(buf[0:8])) // Read the little-endian binary from the buffer and convert to offset
+	e.Distance = binary.LittleEndian.Uint32(buf[8:12])                        // Read the little-endian binary from the buffer and convert to uint32
 
 	return e, nil
 }
 
 func (e edge) StrideLength() serialization.Length {
-	return serialization.Length(binary.Size(e.ChildIndex) + binary.Size(e.Distance))
+	return 8 + 4
 }
 
 func (e edge) IDByte() byte {

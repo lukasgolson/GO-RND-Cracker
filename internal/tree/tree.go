@@ -14,7 +14,7 @@ type Tree struct {
 	closing bool
 }
 
-func New(filename string) (*Tree, error) {
+func NewOrLoad(filename string) (*Tree, error) {
 	bkTree := &Tree{}
 
 	nodesFilename := fmt.Sprintf("%s.nodes.bin", filename)
@@ -57,7 +57,7 @@ func (tree *Tree) addNode(data [32]byte, seed int32) (serialization.Offset, erro
 }
 
 func (tree *Tree) addEdge(parentIndex, childIndex serialization.Offset, distance uint32) error {
-	newEdge := NewEdge(parentIndex, childIndex, distance)
+	newEdge := newEdge(childIndex, distance)
 
 	err := tree.edges.Add(parentIndex, *newEdge)
 	if err != nil {
@@ -105,4 +105,24 @@ func (tree *Tree) ShrinkWrap() error {
 
 func (tree *Tree) Length() serialization.Length {
 	return tree.nodes.Count()
+}
+
+func (tree *Tree) PreExpand(length serialization.Length) error {
+
+	err := tree.nodes.Expand(length)
+	if err != nil {
+		return err
+	}
+	err = tree.edges.ExpandIndex(length)
+	if err != nil {
+		return err
+	}
+
+	err = tree.edges.ExpandElements(length * 2)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
 }

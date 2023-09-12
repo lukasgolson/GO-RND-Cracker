@@ -3,7 +3,6 @@ package number
 import (
 	"awesomeProject/internal/serialization"
 	"encoding/binary"
-	"io"
 )
 
 type Number struct {
@@ -16,28 +15,22 @@ func NewNumber(val int64) Number {
 }
 
 // SerializeToBinaryStream serializes the num struct to a binary stream.
-func (number Number) SerializeToBinaryStream(writer io.Writer) error {
-	err := binary.Write(writer, binary.LittleEndian, number.Value)
-	if err != nil {
-		return err
-	}
+func (number Number) SerializeToBinaryStream(buf []byte) error {
+	binary.LittleEndian.PutUint64(buf, uint64(number.Value)) // Convert int64 to little-endian binary and put it in the buffer
+
 	return nil
 }
 
 // DeserializeFromBinaryStream deserializes the num struct from a binary stream.
-func (number Number) DeserializeFromBinaryStream(reader io.Reader) (Number, error) {
+func (number Number) DeserializeFromBinaryStream(buf []byte) (Number, error) {
 
-	err := binary.Read(reader, binary.LittleEndian, &number.Value)
-
-	if err != nil {
-		return number, err
-	}
+	number.Value = int64(binary.LittleEndian.Uint64(buf)) // Read the little-endian binary from the buffer and convert to int64
 	return number, nil
 
 }
 
 func (number Number) StrideLength() serialization.Length {
-	return serialization.Length(binary.Size(number.Value))
+	return 8
 }
 
 func (number Number) IDByte() byte {

@@ -10,9 +10,10 @@ import (
 )
 
 type FileArray[T serialization.Serializer[T]] struct {
-	header      Header
 	memoryMap   mmap.MMap
+	header      Header
 	backingFile *os.File
+	count       serialization.Length
 }
 
 // NewFileArray initializes a new FileArray instance.
@@ -50,6 +51,8 @@ func NewFileArray[T serialization.Serializer[T]](filename string) (*FileArray[T]
 	if err != nil {
 		return nil, err
 	}
+
+	fileArray.loadCount()
 
 	return fileArray, nil
 }
@@ -105,16 +108,27 @@ func openMmap(file *os.File) (mmap.MMap, error) {
 
 // Count returns the current count of elements stored in the FileArray instance.
 func (fileArray *FileArray[T]) Count() serialization.Length {
-	counterSlice := fileArray.getCounterSlice()
-	count := binary.BigEndian.Uint64(counterSlice)
-	return serialization.Length(count)
+	return fileArray.count
 }
 
 // setCount sets the count of elements in the FileArray to the specified value.
 func (fileArray *FileArray[T]) setCount(value serialization.Length) {
 
+	fileArray.count = value
+}
+
+// setCount sets the count of elements in the FileArray to the specified value.
+func (fileArray *FileArray[T]) saveCount() {
+
 	counterSlice := fileArray.getCounterSlice()
-	binary.BigEndian.PutUint64(counterSlice, uint64(value))
+	binary.BigEndian.PutUint64(counterSlice, uint64(fileArray.count))
+}
+
+// setCount sets the count of elements in the FileArray to the specified value.
+func (fileArray *FileArray[T]) loadCount() {
+	counterSlice := fileArray.getCounterSlice()
+	count := binary.BigEndian.Uint64(counterSlice)
+	fileArray.count = serialization.Length(count)
 }
 
 // incrementCount increments the count of elements in the FileArray by one.
@@ -145,12 +159,15 @@ func (fileArray *FileArray[T]) getCounterSlice() []byte {
 // Returns:
 //   - error: An error if the expansion fails.
 func (fileArray *FileArray[T]) expandMemoryMapSize(expansionSize int64) error {
+	fileArray.saveCount()
+
 	currentSize, err := fileArray.backingFile.Seek(0, io.SeekEnd)
 	if err != nil {
 		return err
 	}
 
-	if err := fileArray.memoryMap.Unmap(); err != nil {
+	err = fileArray.Unmap()
+	if err != nil {
 		return err
 	}
 
@@ -194,6 +211,26 @@ func (fileArray *FileArray[T]) multiplyMemoryMapSize(multiplier float64) error {
 	return nil
 }
 
+// Expand increases the size of the memory-mapped region by the specified number of items.
+func (fileArray *FileArray[T]) Expand(items serialization.Length) error {
+	var item T
+
+	arraySize := item.StrideLength() * items
+
+	currentSize := item.StrideLength() * fileArray.Count()
+
+	expansionSize := arraySize - currentSize
+
+	if expansionSize > 0 {
+		err := fileArray.expandMemoryMapSize(int64(arraySize))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // shrinkFileSizeToDataSize reduces the size of the backing file to match the actual data size, excluding the header.
 //
 // Parameters:
@@ -203,9 +240,11 @@ func (fileArray *FileArray[T]) multiplyMemoryMapSize(multiplier float64) error {
 //   - error: An error if the operation fails.
 func (fileArray *FileArray[T]) shrinkFileSizeToDataSize(itemSize serialization.Length) error {
 
+	fileArray.saveCount()
+
 	dataSize := int64(itemSize*fileArray.Count()) + headerLength
 
-	err := (*fileArray).memoryMap.Unmap()
+	err := (*fileArray).Unmap()
 	if err != nil {
 		return err
 	}
@@ -240,10 +279,10 @@ func (fileArray *FileArray[T]) hasSpace(dataSize uint64) bool {
 // Returns:
 //   - error: An error if unmap or file close operations fail.
 func (fileArray *FileArray[T]) Close() error {
-	var err error
 
-	if fileArray.memoryMap != nil {
-		err = fileArray.memoryMap.Unmap()
+	err := fileArray.Unmap()
+	if err != nil {
+		return err
 	}
 
 	if fileArray.backingFile != nil {
@@ -256,4 +295,18 @@ func (fileArray *FileArray[T]) Close() error {
 // GetFileName returns the name of the backing file.
 func (fileArray *FileArray[T]) GetFileName() string {
 	return fileArray.backingFile.Name()
+}
+
+func (fileArray *FileArray[T]) Unmap() error {
+
+	if fileArray.memoryMap != nil {
+		fileArray.saveCount()
+
+		err := fileArray.memoryMap.Unmap()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

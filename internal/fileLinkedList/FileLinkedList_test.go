@@ -286,7 +286,10 @@ func TestFileLinkedList_Contains(t *testing.T) {
 	testItem := number.NewNumber(24)
 
 	for i := 0; i < 15; i++ {
-		list.Add(0, number.NewNumber(int64(i)))
+		err := list.Add(0, number.NewNumber(int64(i)))
+		if err != nil {
+			t.Errorf("Add() failed: %v", err)
+		}
 	}
 
 	err = list.Add(0, testItem)
