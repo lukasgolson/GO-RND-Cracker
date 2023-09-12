@@ -92,6 +92,6 @@ func init() {
 
 	searchCmd.Flags().StringP("input", "i", "numbers.txt", "The input file containing the sequence to search for")
 	searchCmd.Flags().BoolP("csv", "e", false, "The input file is CSV deliminated")
-	initCmd.Flags().StringArrayP("directory", "d", []string{"data"}, "The directories to store the lookup graphs in")
+	searchCmd.Flags().StringArrayP("directory", "d", []string{"data"}, "The directories to store the lookup graphs in")
 
 }
