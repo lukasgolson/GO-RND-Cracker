@@ -20,7 +20,7 @@ func processPartition(lo, hi, fileCount int64, graphPath string, randSource *ran
 	seedsPerFile := numberOfSeeds / fileCount
 
 	for fileIndex := int64(0); fileIndex < fileCount; fileIndex++ {
-		var bkTree, err = tree.NewOrLoad(graphPath)
+		var bkTree, err = tree.NewOrLoad(graphPath + fmt.Sprintf("-%d", fileIndex))
 		if err != nil {
 			return err
 		}
