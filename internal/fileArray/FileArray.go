@@ -121,13 +121,13 @@ func (fileArray *FileArray[T]) setCount(value serialization.Length) {
 func (fileArray *FileArray[T]) saveCount() {
 
 	counterSlice := fileArray.getCounterSlice()
-	binary.BigEndian.PutUint64(counterSlice, uint64(fileArray.count))
+	binary.LittleEndian.PutUint64(counterSlice, uint64(fileArray.count))
 }
 
 // setCount sets the count of elements in the FileArray to the specified value.
 func (fileArray *FileArray[T]) loadCount() {
 	counterSlice := fileArray.getCounterSlice()
-	count := binary.BigEndian.Uint64(counterSlice)
+	count := binary.LittleEndian.Uint64(counterSlice)
 	fileArray.count = serialization.Length(count)
 }
 

@@ -10,7 +10,7 @@ import (
 const (
 	headerLength       = 28
 	signature          = "LGO-FA"
-	version      uint8 = 1
+	version      uint8 = 2
 )
 
 type Header struct {
