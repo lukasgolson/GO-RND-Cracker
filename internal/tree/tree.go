@@ -118,7 +118,7 @@ func (tree *Tree) PreExpand(length serialization.Length) error {
 		return err
 	}
 
-	err = tree.edges.ExpandElements(length * 2)
+	err = tree.edges.ExpandElements(length)
 	if err != nil {
 		return err
 	}

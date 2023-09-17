@@ -52,7 +52,7 @@ func processPartition(lo, hi, fileCount int64, graphPath string, randSource *ran
 			}
 		} else {
 			fmt.Println("No existing tree found. Creating new tree with name", graphPath, "... Start seed", startSeed, "end seed:", endSeed)
-			err := bkTree.PreExpand(serialization.Length(numberOfSeeds))
+			err := bkTree.PreExpand(serialization.Length(seedsPerFile))
 			if err != nil {
 				return err
 			}
@@ -84,6 +84,18 @@ func Initialize(coreCount int, fileCount int, seedCount int64, dataDirectories [
 
 	if fileCount < coreCount {
 		return fmt.Errorf("file count must be greater than or equal to the core count")
+	}
+
+	if fileCount%coreCount != 0 {
+		return fmt.Errorf("file count must be divisible by the core count")
+	}
+
+	if seedCount < 1 {
+		return fmt.Errorf("seed count must be at least 1")
+	}
+
+	if int64(fileCount) > seedCount {
+		return fmt.Errorf("file count must be less than or equal to the seed count")
 	}
 
 	for _, dir := range dataDirectories {
