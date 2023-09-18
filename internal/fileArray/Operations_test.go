@@ -14,7 +14,7 @@ func TestAppendItemSpace(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fA, err := NewFileArray[number.Number](tmpFile.Name())
+	fA, err := NewFileArray[number.Number](tmpFile.Name(), false)
 
 	num := number.NewNumber(42)
 
@@ -37,7 +37,7 @@ func TestAppendItemNoSpace(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fA, err := NewFileArray[number.Number](tmpFile.Name())
+	fA, err := NewFileArray[number.Number](tmpFile.Name(), false)
 
 	num := number.NewNumber(42)
 
@@ -59,7 +59,7 @@ func TestSetItemAtIndex(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fA, err := NewFileArray[number.Number](tmpFile.Name())
+	fA, err := NewFileArray[number.Number](tmpFile.Name(), false)
 
 	num := number.NewNumber(42)
 
@@ -76,7 +76,7 @@ func TestSetItemAtIndexWithIndexOutOfBounds(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fA, err := NewFileArray[number.Number](tmpFile.Name())
+	fA, err := NewFileArray[number.Number](tmpFile.Name(), false)
 
 	num := number.NewNumber(42)
 
@@ -93,7 +93,7 @@ func TestGetItemFromIndex(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fA, err := NewFileArray[number.Number](tmpFile.Name())
+	fA, err := NewFileArray[number.Number](tmpFile.Name(), false)
 
 	num := number.NewNumber(128)
 
@@ -122,7 +122,7 @@ func TestAppendItemAndCount(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fileArray, err := NewFileArray[number.Number](tmpFile.Name())
+	fileArray, err := NewFileArray[number.Number](tmpFile.Name(), false)
 
 	if err != nil {
 		t.Fatalf("Failed to create file array: %v", err)
@@ -160,7 +160,7 @@ func TestGetItemFromIndexWithIndexOutOfBounds(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fA, err := NewFileArray[number.Number](tmpFile.Name())
+	fA, err := NewFileArray[number.Number](tmpFile.Name(), false)
 
 	num := number.NewNumber(128)
 
@@ -185,7 +185,7 @@ func TestGetItemFromIndexWithIndexEqualToCount(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fA, err := NewFileArray[number.Number](tmpFile.Name())
+	fA, err := NewFileArray[number.Number](tmpFile.Name(), false)
 
 	num := number.NewNumber(128)
 
@@ -210,7 +210,7 @@ func TestAppendAndGetItem(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fileArray, err := NewFileArray[number.Number](tmpFile.Name())
+	fileArray, err := NewFileArray[number.Number](tmpFile.Name(), false)
 
 	if err != nil {
 		t.Fatalf("Failed to create file array: %v", err)
@@ -247,7 +247,7 @@ func TestShrinkwrapFile(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fileArray, err := NewFileArray[number.Number](tmpFile.Name())
+	fileArray, err := NewFileArray[number.Number](tmpFile.Name(), false)
 
 	if err != nil {
 		t.Fatalf("Failed to create file array: %v", err)

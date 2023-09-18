@@ -45,6 +45,12 @@ func Search(inputFile string, delimiter string, dataDirectories []string) error 
 		go func(path string) {
 			defer wg.Done()
 			results := searchInTree(parsedValues, path)
+
+			for _, distance := range results {
+				fmt.Printf("Seed: %d, Match Distance: %d\n", distance.Seed, distance.Distance)
+
+			}
+
 			resultsChan <- results
 		}(treePath)
 	}
@@ -61,11 +67,6 @@ func Search(inputFile string, delimiter string, dataDirectories []string) error 
 		seedDistances = append(seedDistances, result...)
 	}
 
-	// Print the results
-	for _, sd := range seedDistances {
-		fmt.Printf("Seed: %d, Match Distance: %d\n", sd.Seed, sd.Distance)
-	}
-
 	return nil
 }
 
@@ -75,7 +76,7 @@ func searchInTree(parsedValues []byte, treePath string) []SeedDistance {
 	stride := 1
 	seedDistances := make([]SeedDistance, 0)
 
-	bkTree, err := tree.NewOrLoad(treePath)
+	bkTree, err := tree.NewOrLoad(treePath, false)
 	if err != nil {
 		panic(err)
 	}

@@ -23,7 +23,7 @@ func TestFileLinkedList_Add(t *testing.T) {
 	defer os.Remove(tmpFile.Name())
 
 	// Create a new FileLinkedList and perform the Add operation.
-	list, _ := NewFileLinkedList[number.Number](tmpFile.Name())
+	list, _ := NewFileLinkedList[number.Number](tmpFile.Name(), false)
 
 	err = list.Add(0, *new(number.Number))
 	if err != nil {
@@ -62,7 +62,7 @@ func TestFileLinkedList_AddNonContiguous(t *testing.T) {
 	defer os.Remove(tmpFile.Name())
 
 	// Create a new FileLinkedList and perform the Add operation.
-	list, _ := NewFileLinkedList[number.Number](tmpFile.Name())
+	list, _ := NewFileLinkedList[number.Number](tmpFile.Name(), false)
 
 	err = list.Add(0, *new(number.Number))
 	if err != nil {
@@ -128,7 +128,7 @@ func TestFileLinkedList_GetOne(t *testing.T) {
 	defer os.Remove(tmpFile.Name())
 
 	// Create a new FileLinkedList and perform the Add operation.
-	list, err := NewFileLinkedList[number.Number](tmpFile.Name())
+	list, err := NewFileLinkedList[number.Number](tmpFile.Name(), false)
 	if err != nil {
 		t.Errorf("NewFileLinkedList() failed: %v", err)
 	}
@@ -166,7 +166,7 @@ func TestFileLinkedList_GetMultiple(t *testing.T) {
 	defer os.Remove(tmpFile.Name())
 
 	// Create a new FileLinkedList and perform the Add operation.
-	list, _ := NewFileLinkedList[number.Number](tmpFile.Name())
+	list, _ := NewFileLinkedList[number.Number](tmpFile.Name(), false)
 
 	for i := 0; i < 10; i++ {
 		err := list.Add(0, number.NewNumber(int64(i)))
@@ -204,7 +204,7 @@ func TestFileLinkedList_SetGetListID(t *testing.T) {
 	defer os.Remove(tmpFile.Name())
 
 	// Create a new FileLinkedList and perform the Add operation.
-	list, _ := NewFileLinkedList[number.Number](tmpFile.Name())
+	list, _ := NewFileLinkedList[number.Number](tmpFile.Name(), false)
 
 	testOffsetValue := serialization.Offset(24)
 
@@ -250,7 +250,7 @@ func TestFileLinkedList_GetInvalidListID(t *testing.T) {
 	defer os.Remove(tmpFile.Name())
 
 	// Create a new FileLinkedList and perform the Add operation.
-	list, _ := NewFileLinkedList[number.Number](tmpFile.Name())
+	list, _ := NewFileLinkedList[number.Number](tmpFile.Name(), false)
 
 	exists, _, err := list.getBaseOffsetFromListID(0)
 
@@ -278,7 +278,7 @@ func TestFileLinkedList_Contains(t *testing.T) {
 	defer os.Remove(tmpFile.Name())
 
 	// Create a new FileLinkedList and perform the Add operation.
-	list, err := NewFileLinkedList[number.Number](tmpFile.Name())
+	list, err := NewFileLinkedList[number.Number](tmpFile.Name(), false)
 	if err != nil {
 		t.Errorf("NewFileLinkedList() failed: %v", err)
 	}
@@ -343,7 +343,7 @@ func TestFileLinkedList_RemoveOne(t *testing.T) {
 	defer os.Remove(tmpFile.Name())
 
 	// Create a new FileLinkedList and perform the Add operation.
-	list, err := NewFileLinkedList[number.Number](tmpFile.Name())
+	list, err := NewFileLinkedList[number.Number](tmpFile.Name(), false)
 	if err != nil {
 		t.Errorf("NewFileLinkedList() failed: %v", err)
 	}
