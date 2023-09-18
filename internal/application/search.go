@@ -81,7 +81,7 @@ func searchInTree(parsedValues []byte, treePath string) []SeedDistance {
 		panic(err)
 	}
 
-	for i := 0; i <= len(parsedValues)-sequenceLength; i += stride {
+	for i := len(parsedValues) - sequenceLength; i >= 0; i -= stride {
 		sequence := parsedValues[i : i+sequenceLength]
 		found, seed, distance := FindClosestInTree(bkTree, sequence)
 
