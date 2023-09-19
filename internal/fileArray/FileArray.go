@@ -14,6 +14,7 @@ type FileArray[T serialization.Serializer[T]] struct {
 	header      Header
 	backingFile *os.File
 	count       serialization.Length
+	readOnly    bool
 }
 
 // NewFileArray initializes a new FileArray instance.
@@ -28,9 +29,16 @@ type FileArray[T serialization.Serializer[T]] struct {
 func NewFileArray[T serialization.Serializer[T]](filename string, readOnly bool) (*FileArray[T], error) {
 	fileArray := &FileArray[T]{}
 
+	fileArray.readOnly = readOnly
+
 	var serializer T
 
 	file, err := openAndInitializeFile[T](filename)
+	if err != nil {
+		return nil, err
+	}
+
+	err = upgradeFile(file)
 	if err != nil {
 		return nil, err
 	}
@@ -143,10 +151,16 @@ func (fileArray *FileArray[T]) setCount(value serialization.Length) {
 }
 
 // setCount sets the count of elements in the FileArray to the specified value.
-func (fileArray *FileArray[T]) saveCount() {
+func (fileArray *FileArray[T]) saveCount() error {
+
+	if fileArray.readOnly {
+		return fmt.Errorf("cannot save count to read-only file")
+	}
 
 	counterSlice := fileArray.getCounterSlice()
 	binary.LittleEndian.PutUint64(counterSlice, uint64(fileArray.count))
+
+	return nil
 }
 
 // setCount sets the count of elements in the FileArray to the specified value.
@@ -184,7 +198,11 @@ func (fileArray *FileArray[T]) getCounterSlice() []byte {
 // Returns:
 //   - error: An error if the expansion fails.
 func (fileArray *FileArray[T]) expandMemoryMapSize(expansionSize int64) error {
-	fileArray.saveCount()
+	err := fileArray.saveCount()
+
+	if err != nil {
+		return err
+	}
 
 	currentSize, err := fileArray.backingFile.Seek(0, io.SeekEnd)
 	if err != nil {
@@ -265,11 +283,14 @@ func (fileArray *FileArray[T]) Expand(items serialization.Length) error {
 //   - error: An error if the operation fails.
 func (fileArray *FileArray[T]) shrinkFileSizeToDataSize(itemSize serialization.Length) error {
 
-	fileArray.saveCount()
+	err := fileArray.saveCount()
+	if err != nil {
+		return err
+	}
 
 	dataSize := int64(itemSize*fileArray.Count()) + headerLength
 
-	err := (*fileArray).Unmap()
+	err = (*fileArray).Unmap()
 	if err != nil {
 		return err
 	}
@@ -325,13 +346,35 @@ func (fileArray *FileArray[T]) GetFileName() string {
 func (fileArray *FileArray[T]) Unmap() error {
 
 	if fileArray.memoryMap != nil {
-		fileArray.saveCount()
+
+		if !fileArray.readOnly {
+			err := fileArray.saveCount()
+			if err != nil {
+				return err
+			}
+		}
 
 		err := fileArray.memoryMap.Unmap()
 		if err != nil {
 			return err
 		}
 	}
+
+	return nil
+}
+
+func (fileArray *FileArray[T]) Reopen(readOnly bool) error {
+	err := fileArray.Unmap()
+	if err != nil {
+		return err
+	}
+
+	mMap, err := openMmap(fileArray.backingFile, readOnly)
+	if err != nil {
+		return err
+	}
+
+	fileArray.memoryMap = mMap
 
 	return nil
 }

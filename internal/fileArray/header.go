@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"github.com/edsrzf/mmap-go"
+	"os"
 )
 
 const (
@@ -65,6 +67,33 @@ func readHeader(header []byte) (Header, error) {
 	h.strideLength = serialization.Length(binary.LittleEndian.Uint64(header[12:20]))
 
 	return h, nil
+}
+
+func upgradeFile(file *os.File) error {
+
+	region, err := mmap.MapRegion(file, headerLength, mmap.RDWR, 0, 0)
+	if err != nil {
+		return err
+	}
+
+	header := region[:headerLength]
+
+	if header[6] == 1 {
+		fmt.Println("Warning: FileArray was created with a previous version of the software. Upgrading to version 2..")
+
+		counter := binary.BigEndian.Uint64(header[headerLength-8:])
+		binary.LittleEndian.PutUint64(header[headerLength-8:], counter)
+
+		header[6] = 2
+
+	}
+
+	err = region.Unmap()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func verifyHeader[T serialization.Serializer[T]](serializer T, header Header) error {
