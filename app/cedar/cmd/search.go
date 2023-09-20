@@ -103,7 +103,7 @@ func init() {
 	searchCmd.Flags().StringP("input", "i", "numbers.txt", "The input file containing the sequence to search for")
 	searchCmd.Flags().BoolP("csv", "e", false, "The input file is CSV deliminated")
 	searchCmd.Flags().StringArrayP("directory", "d", []string{"data"}, "The directories to search for seed graphs in")
-	searchCmd.Flags().IntP("concurrent", "c", 1, "The number of concurrent trees to search")
+	searchCmd.Flags().IntP("concurrent", "m", 1, "The number of concurrent trees to search")
 	searchCmd.Flags().IntP("stride", "s", 16, "The stride length to use when searching")
 
 }

@@ -17,7 +17,7 @@ type SeedDistance struct {
 	Distance uint32
 }
 
-func Search(inputFile string, delimiter string, dataDirectories []string, concurrrentTrees int, stride int) error {
+func Search(inputFile string, delimiter string, dataDirectories []string, concurrentTrees int, stride int) error {
 	parsedValues, err := readFileAndParse(inputFile, delimiter, 0, 100)
 	if err != nil {
 		return err
@@ -34,48 +34,47 @@ func Search(inputFile string, delimiter string, dataDirectories []string, concur
 		treeFiles = append(treeFiles, files...)
 	}
 
-	var wg sync.WaitGroup
 	resultsChan := make(chan SeedDistance)
 
-	counter := 0
-	for _, treePath := range treeFiles {
+	var wg sync.WaitGroup
 
-		counter++
+	// Process trees in separate goroutine
+	go func() {
+		for _, treePath := range treeFiles {
+			bkTree, err := tree.NewOrLoad(treePath, false)
+			if err != nil {
+				fmt.Printf("Error loading tree for path %s: %v\n", treePath, err)
+				return
+			} else {
+				fmt.Printf("Loaded tree for path %s\n", treePath)
+			}
 
-		bkTree, err := tree.NewOrLoad(treePath, false)
-		if err != nil {
-			fmt.Printf("Error loading tree for path %s: %v\n", treePath, err)
-			return err
-		}
+			for i := len(parsedValues) - 32; i >= 0; i -= stride {
+				wg.Add(1)
+				sequence := parsedValues[i : i+32]
 
-		// Stride through the parsed values with a stride of 16, using goroutines
-		for i := len(parsedValues) - 32; i >= 0; i -= stride {
-			wg.Add(1)
-			sequence := parsedValues[i : i+32]
-			go func(seq []byte) {
-				found, result := searchInTree(seq, bkTree)
-				if found {
-					resultsChan <- result
-				}
+				go func(seq []byte) {
+					defer wg.Done() // Ensure we always decrement the wait group
 
-				wg.Done()
-			}(sequence)
-		}
+					found, result := searchInTree(seq, bkTree)
+					if found {
+						resultsChan <- result
+					}
+				}(sequence)
+			}
 
-		if counter >= concurrrentTrees {
-			// Wait for all goroutines to finish
+			// Wait for all goroutines to finish for this tree
 			wg.Wait()
-			counter = 0
 		}
-	}
 
-	// Close the results channel
-	close(resultsChan)
+		// Close the results channel after all trees are processed
+		close(resultsChan)
+	}()
 
 	// Process results from the channel
 	for result := range resultsChan {
 		// Process the result as needed
-		fmt.Println("Result:", result)
+		fmt.Println("Result:", result.Seed, " ", result.Distance)
 	}
 
 	return nil
