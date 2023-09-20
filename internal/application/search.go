@@ -17,7 +17,7 @@ type SeedDistance struct {
 	Distance uint32
 }
 
-func Search(inputFile string, delimiter string, dataDirectories []string) error {
+func Search(inputFile string, delimiter string, dataDirectories []string, concurrrentTrees int, stride int) error {
 	parsedValues, err := readFileAndParse(inputFile, delimiter, 0, 100)
 	if err != nil {
 		return err
@@ -37,7 +37,10 @@ func Search(inputFile string, delimiter string, dataDirectories []string) error 
 	var wg sync.WaitGroup
 	resultsChan := make(chan SeedDistance)
 
+	counter := 0
 	for _, treePath := range treeFiles {
+
+		counter++
 
 		bkTree, err := tree.NewOrLoad(treePath, false)
 		if err != nil {
@@ -46,11 +49,10 @@ func Search(inputFile string, delimiter string, dataDirectories []string) error 
 		}
 
 		// Stride through the parsed values with a stride of 16, using goroutines
-		for i := len(parsedValues) - 32; i >= 0; i -= 16 {
+		for i := len(parsedValues) - 32; i >= 0; i -= stride {
 			wg.Add(1)
 			sequence := parsedValues[i : i+32]
 			go func(seq []byte) {
-				// Look up the subsequence in the tree
 				found, result := searchInTree(seq, bkTree)
 				if found {
 					resultsChan <- result
@@ -59,10 +61,13 @@ func Search(inputFile string, delimiter string, dataDirectories []string) error 
 				wg.Done()
 			}(sequence)
 		}
-	}
 
-	// Wait for all goroutines to finish
-	wg.Wait()
+		if counter >= concurrrentTrees {
+			// Wait for all goroutines to finish
+			wg.Wait()
+			counter = 0
+		}
+	}
 
 	// Close the results channel
 	close(resultsChan)

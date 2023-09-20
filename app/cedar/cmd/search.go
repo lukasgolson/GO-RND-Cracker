@@ -52,6 +52,16 @@ var searchCmd = &cobra.Command{
 			panic(err)
 		}
 
+		concurrentTrees, err := cmd.Flags().GetInt("concurrent")
+		if err != nil {
+			panic(err)
+		}
+
+		stride, err := cmd.Flags().GetInt("stride")
+		if err != nil {
+			panic(err)
+		}
+
 		var deliminator string
 
 		if isCSV {
@@ -69,7 +79,7 @@ var searchCmd = &cobra.Command{
 
 		}
 
-		err = application.Search(inputFile, deliminator, directory)
+		err = application.Search(inputFile, deliminator, directory, concurrentTrees, stride)
 		if err != nil {
 			panic(err)
 		}
@@ -93,5 +103,7 @@ func init() {
 	searchCmd.Flags().StringP("input", "i", "numbers.txt", "The input file containing the sequence to search for")
 	searchCmd.Flags().BoolP("csv", "e", false, "The input file is CSV deliminated")
 	searchCmd.Flags().StringArrayP("directory", "d", []string{"data"}, "The directories to search for seed graphs in")
+	searchCmd.Flags().IntP("concurrent", "c", 1, "The number of concurrent trees to search")
+	searchCmd.Flags().IntP("stride", "s", 16, "The stride length to use when searching")
 
 }
