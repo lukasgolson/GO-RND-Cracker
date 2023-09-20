@@ -85,7 +85,6 @@ func upgradeFile(file *os.File) error {
 		binary.LittleEndian.PutUint64(header[headerLength-8:], counter)
 
 		header[6] = 2
-
 	}
 
 	err = region.Unmap()
