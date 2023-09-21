@@ -40,6 +40,8 @@ func Search(inputFile string, delimiter string, dataDirectories []string, concur
 
 	// Process trees in separate goroutine
 	go func() {
+
+		counter := 0
 		for _, treePath := range treeFiles {
 			bkTree, err := tree.NewOrLoad(treePath, false)
 			if err != nil {
@@ -63,8 +65,14 @@ func Search(inputFile string, delimiter string, dataDirectories []string, concur
 				}(sequence)
 			}
 
-			// Wait for all goroutines to finish for this tree
-			wg.Wait()
+			counter++
+
+			if counter >= concurrentTrees {
+				// Wait for all goroutines to finish for these trees
+				wg.Wait()
+				counter = 0
+			}
+
 		}
 
 		// Close the results channel after all trees are processed
