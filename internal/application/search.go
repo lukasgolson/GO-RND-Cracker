@@ -48,12 +48,14 @@ func Search(inputFile string, delimiter string, dataDirectories []string, concur
 				fmt.Printf("Error loading tree for path %s: %v\n", treePath, err)
 				return
 			} else {
-				fmt.Printf("Loaded tree for path %s\n", treePath)
+				fmt.Printf("Initialized tree for path %s\n", treePath)
 			}
 
 			// Prefetch the tree if needed
 			if prefetch {
+				fmt.Printf("Prefetching tree for path %s\n", treePath)
 				bkTree.Prefetch()
+				fmt.Printf("Prefetching tree for path %s done\n", treePath)
 			}
 
 			for i := len(parsedValues) - 32; i >= 0; i -= stride {
@@ -62,7 +64,7 @@ func Search(inputFile string, delimiter string, dataDirectories []string, concur
 
 				go func(seq []byte) {
 					defer wg.Done() // Ensure we always decrement the wait group
-
+					
 					found, result := searchInTree(seq, bkTree)
 					if found {
 						resultsChan <- result
