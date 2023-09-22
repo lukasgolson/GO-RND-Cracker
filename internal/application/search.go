@@ -17,7 +17,7 @@ type SeedDistance struct {
 	Distance uint32
 }
 
-func Search(inputFile string, delimiter string, dataDirectories []string, concurrentTrees int, stride int) error {
+func Search(inputFile string, delimiter string, dataDirectories []string, concurrentTrees int, stride int, prefetch bool) error {
 	parsedValues, err := readFileAndParse(inputFile, delimiter, 0, 100)
 	if err != nil {
 		return err
@@ -49,6 +49,11 @@ func Search(inputFile string, delimiter string, dataDirectories []string, concur
 				return
 			} else {
 				fmt.Printf("Loaded tree for path %s\n", treePath)
+			}
+
+			// Prefetch the tree if needed
+			if prefetch {
+				bkTree.Prefetch()
 			}
 
 			for i := len(parsedValues) - 32; i >= 0; i -= stride {

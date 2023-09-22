@@ -62,6 +62,11 @@ var searchCmd = &cobra.Command{
 			panic(err)
 		}
 
+		prefetch, err := cmd.Flags().GetBool("prefetch")
+		if err != nil {
+			panic(err)
+		}
+
 		var deliminator string
 
 		if isCSV {
@@ -79,7 +84,7 @@ var searchCmd = &cobra.Command{
 
 		}
 
-		err = application.Search(inputFile, deliminator, directory, concurrentTrees, stride)
+		err = application.Search(inputFile, deliminator, directory, concurrentTrees, stride, prefetch)
 		if err != nil {
 			panic(err)
 		}
@@ -90,20 +95,11 @@ var searchCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(searchCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// searchCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// searchCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-
 	searchCmd.Flags().StringP("input", "i", "numbers.txt", "The input file containing the sequence to search for")
 	searchCmd.Flags().BoolP("csv", "e", false, "The input file is CSV deliminated")
 	searchCmd.Flags().StringArrayP("directory", "d", []string{"data"}, "The directories to search for seed graphs in")
 	searchCmd.Flags().IntP("concurrent", "m", 1, "The number of concurrent trees to search")
 	searchCmd.Flags().IntP("stride", "s", 16, "The stride length to use when searching")
+	searchCmd.Flags().BoolP("prefetch", "p", false, "Prefetch the current tree into memory before searching")
 
 }

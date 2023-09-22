@@ -364,3 +364,8 @@ func (list *FileLinkedList[T]) ExpandIndex(length serialization.Length) error {
 
 	return nil
 }
+
+func (list *FileLinkedList[T]) Prefetch() {
+	list.elementsArray.Prefetch()
+	list.indexArray.Prefetch()
+}
