@@ -15,18 +15,18 @@ type FileLinkedList[T serialization.Serializer[T]] struct {
 // NewFileLinkedList initializes a new instance of FileLinkedList[T] and its associated file arrays.
 // It takes a filename as input and creates two file arrays: one for elements and one for index.
 // Returns a pointer to the new FileLinkedList[T] and an error if any.
-func NewFileLinkedList[T serialization.Serializer[T]](filename string) (*FileLinkedList[T], error) {
+func NewFileLinkedList[T serialization.Serializer[T]](filename string, readOnly bool) (*FileLinkedList[T], error) {
 	fileLinkedList := &FileLinkedList[T]{}
 
 	elementsFilename := fmt.Sprintf("%s.elements.bin", filename)
 	indexFilename := fmt.Sprintf("%s.index.bin", filename)
 
-	elementsArray, err := fileArray.NewFileArray[linkedListNode[T]](elementsFilename)
+	elementsArray, err := fileArray.NewFileArray[linkedListNode[T]](elementsFilename, readOnly)
 	if err != nil {
 		return nil, err
 	}
 
-	indexArray, err := fileArray.NewFileArray[indexEntry](indexFilename)
+	indexArray, err := fileArray.NewFileArray[indexEntry](indexFilename, readOnly)
 	if err != nil {
 		return nil, err
 	}

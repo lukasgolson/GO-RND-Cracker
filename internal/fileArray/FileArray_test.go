@@ -15,7 +15,7 @@ func TestNewFileArray(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fA, err := NewFileArray[number.Number](tmpFile.Name())
+	fA, err := NewFileArray[number.Number](tmpFile.Name(), false)
 	if err != nil {
 		t.Fatalf("NewFileArray returned an error: %v", err)
 	}
@@ -76,11 +76,11 @@ func TestOpenMmap(t *testing.T) {
 	}
 
 	// Open the file using mmap
-	memoryMap, err := openMmap(tempFile)
+	memoryMap, err := openReadWriteMmap(tempFile)
 
 	// Check for errors
 	if err != nil {
-		t.Fatalf("openMmap returned an error: %v", err)
+		t.Fatalf("openReadWriteMmap returned an error: %v", err)
 	}
 	defer memoryMap.Unmap() // Ensure we unmap the memory
 
@@ -115,7 +115,7 @@ func TestFileArray_Count(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fA, err := NewFileArray[number.Number](tmpFile.Name())
+	fA, err := NewFileArray[number.Number](tmpFile.Name(), false)
 	if err != nil {
 		t.Fatalf("NewFileArray returned an error: %v", err)
 	}
@@ -148,7 +148,7 @@ func TestFileArray_Close(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fA, err := NewFileArray[number.Number](tmpFile.Name())
+	fA, err := NewFileArray[number.Number](tmpFile.Name(), false)
 
 	err = fA.Close()
 	if err != nil {
@@ -164,7 +164,7 @@ func TestFileArrayCountEmptyMemoryMap(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fileArray, err := NewFileArray[number.Number](tmpFile.Name())
+	fileArray, err := NewFileArray[number.Number](tmpFile.Name(), false)
 
 	if err != nil {
 		t.Fatalf("Failed to create file array: %v", err)
@@ -183,7 +183,7 @@ func TestFileArraySetCount(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fileArray, err := NewFileArray[number.Number](tmpFile.Name())
+	fileArray, err := NewFileArray[number.Number](tmpFile.Name(), false)
 
 	if err != nil {
 		t.Fatalf("Failed to create file array: %v", err)
@@ -206,7 +206,7 @@ func TestFileArrayIncrementCount(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fileArray, err := NewFileArray[number.Number](tmpFile.Name())
+	fileArray, err := NewFileArray[number.Number](tmpFile.Name(), false)
 
 	if err != nil {
 		t.Fatalf("Failed to create file array: %v", err)
@@ -230,7 +230,7 @@ func TestFileArray_FileRetrieve(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
-	fA, err := NewFileArray[number.Number](tmpFile.Name())
+	fA, err := NewFileArray[number.Number](tmpFile.Name(), false)
 
 	for i := 0; i <= 24; i++ {
 		_, err = fA.Append(number.NewNumber(int64(i)))
@@ -245,7 +245,7 @@ func TestFileArray_FileRetrieve(t *testing.T) {
 		t.Fatalf("Failed to close file array: %v", err)
 	}
 
-	fA2, err := NewFileArray[number.Number](tmpFile.Name())
+	fA2, err := NewFileArray[number.Number](tmpFile.Name(), false)
 
 	if err != nil {
 		t.Fatalf("Failed to create file array: %v", err)

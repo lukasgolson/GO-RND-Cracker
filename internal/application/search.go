@@ -17,82 +17,87 @@ type SeedDistance struct {
 	Distance uint32
 }
 
-// Search performs a search operation on a set of trees.
-func Search(inputFile string, delimiter string, dataDirectories []string) error {
-
-	allTrees := make([]string, 0)
-
-	for _, path := range dataDirectories {
-		trees, err := findNodesFiles(path)
-		if err != nil {
-			return err
-		}
-
-		allTrees = append(allTrees, trees...)
-	}
-
+func Search(inputFile string, delimiter string, dataDirectories []string, concurrentTrees int, stride int) error {
 	parsedValues, err := readFileAndParse(inputFile, delimiter, 0, 100)
 	if err != nil {
 		return err
 	}
 
-	var wg sync.WaitGroup
-	resultsChan := make(chan []SeedDistance)
+	treeFiles := make([]string, 0)
 
-	// Perform search in parallel for each tree.
-	for _, treePath := range allTrees {
-		wg.Add(1)
-		go func(path string) {
-			defer wg.Done()
-			results := searchInTree(parsedValues, path)
-			resultsChan <- results
-		}(treePath)
+	for _, directory := range dataDirectories {
+		files, err := findNodesFiles(directory)
+		if err != nil {
+			return err
+		}
+
+		treeFiles = append(treeFiles, files...)
 	}
 
-	// Start a goroutine to collect and print the results.
+	resultsChan := make(chan SeedDistance)
+
+	var wg sync.WaitGroup
+
+	// Process trees in separate goroutine
 	go func() {
-		wg.Wait()
+
+		counter := 0
+		for _, treePath := range treeFiles {
+			bkTree, err := tree.NewOrLoad(treePath, false)
+			if err != nil {
+				fmt.Printf("Error loading tree for path %s: %v\n", treePath, err)
+				return
+			} else {
+				fmt.Printf("Loaded tree for path %s\n", treePath)
+			}
+
+			for i := len(parsedValues) - 32; i >= 0; i -= stride {
+				wg.Add(1)
+				sequence := parsedValues[i : i+32]
+
+				go func(seq []byte) {
+					defer wg.Done() // Ensure we always decrement the wait group
+
+					found, result := searchInTree(seq, bkTree)
+					if found {
+						resultsChan <- result
+					}
+				}(sequence)
+			}
+
+			counter++
+
+			if counter >= concurrentTrees {
+				// Wait for all goroutines to finish for these trees
+				wg.Wait()
+				counter = 0
+			}
+
+		}
+
+		// Close the results channel after all trees are processed
 		close(resultsChan)
 	}()
 
-	// Collect and print the results from the channel.
-	seedDistances := make([]SeedDistance, 0)
+	// Process results from the channel
 	for result := range resultsChan {
-		seedDistances = append(seedDistances, result...)
-	}
-
-	// Print the results
-	for _, sd := range seedDistances {
-		fmt.Printf("Seed: %d, Match Distance: %d\n", sd.Seed, sd.Distance)
+		// Process the result as needed
+		fmt.Println("Result:", result.Seed, " ", result.Distance)
 	}
 
 	return nil
 }
 
-// searchInTree searches for sequences in a tree and returns the results.
-func searchInTree(parsedValues []byte, treePath string) []SeedDistance {
-	const sequenceLength = 32
-	stride := 1
-	seedDistances := make([]SeedDistance, 0)
+func searchInTree(sequence []byte, bkTree *tree.Tree) (bool, SeedDistance) {
 
-	bkTree, err := tree.NewOrLoad(treePath)
-	if err != nil {
-		panic(err)
+	found, seed, distance := FindClosestInTree(bkTree, sequence)
+	if found {
+		return found, SeedDistance{Seed: seed, Distance: distance}
+	} else {
+		return false, SeedDistance{Seed: -1, Distance: math.MaxUint32}
 	}
-
-	for i := 0; i <= len(parsedValues)-sequenceLength; i += stride {
-		sequence := parsedValues[i : i+sequenceLength]
-		found, seed, distance := FindClosestInTree(bkTree, sequence)
-
-		if found {
-			seedDistances = append(seedDistances, SeedDistance{Seed: seed, Distance: distance})
-		}
-	}
-
-	return seedDistances
 }
 
-// findNodesFiles finds and returns a list of node files in a directory tree.
 func findNodesFiles(dataPath string) ([]string, error) {
 	var nodesFiles []string
 	stack := []string{dataPath}
@@ -121,7 +126,6 @@ func findNodesFiles(dataPath string) ([]string, error) {
 	return nodesFiles, nil
 }
 
-// FindClosestInTree finds the closest element in the tree for a given sequence.
 func FindClosestInTree(bkTree *tree.Tree, sequence []byte) (found bool, seed int32, distance uint32) {
 	result := bkTree.FindClosestElement([32]byte(sequence), 16)
 
@@ -131,7 +135,6 @@ func FindClosestInTree(bkTree *tree.Tree, sequence []byte) (found bool, seed int
 	return false, -1, math.MaxUint32
 }
 
-// readFileAndParse reads a file, parses it, and returns the parsed values as a byte array.
 func readFileAndParse(filename string, delimiter string, minNumber, maxNumber int) ([]byte, error) {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -165,7 +168,6 @@ func readFileAndParse(filename string, delimiter string, minNumber, maxNumber in
 	return byteArray, nil
 }
 
-// splitByDelimiter splits a string by a delimiter and returns the substrings.
 func splitByDelimiter(s string, delimiter string) []string {
 	return strings.Split(s, delimiter)
 }

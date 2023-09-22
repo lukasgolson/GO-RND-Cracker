@@ -9,7 +9,7 @@ import (
 func TestAddToBKTree_EmptyTree(t *testing.T) {
 	// Create a test instance of the BKTree
 	tmpFile, _ := os.CreateTemp("", "test-file")
-	tree, err := NewOrLoad(tmpFile.Name())
+	tree, err := NewOrLoad(tmpFile.Name(), false)
 	if err != nil {
 		t.Fatalf("Error creating tree: %v", err)
 	}
@@ -27,7 +27,7 @@ func TestAddToBKTree_EmptyTree(t *testing.T) {
 
 func TestAddToBKTree_AddingDuplicate(t *testing.T) {
 	tmpFile, _ := os.CreateTemp("", "test-file")
-	tree, err := NewOrLoad(tmpFile.Name())
+	tree, err := NewOrLoad(tmpFile.Name(), false)
 
 	if err != nil {
 		t.Fatalf("Error creating tree: %v", err)
@@ -52,7 +52,7 @@ func TestAddToBKTree_AddingDuplicate(t *testing.T) {
 func TestAddToBKTree_AddingToNonEmptyTree(t *testing.T) {
 
 	tmpFile, _ := os.CreateTemp("", "test-file")
-	tree, err := NewOrLoad(tmpFile.Name())
+	tree, err := NewOrLoad(tmpFile.Name(), false)
 
 	if err != nil {
 		t.Fatalf("Error creating tree: %v", err)
@@ -76,7 +76,7 @@ func TestAddToBKTree_AddingToNonEmptyTree(t *testing.T) {
 }
 
 func TestFuzzyMatch(t *testing.T) {
-	tree, err := NewOrLoad("Test")
+	tree, err := NewOrLoad("Test", false)
 	if err != nil {
 		t.Fatalf("Error creating tree: %v", err)
 	}

@@ -14,7 +14,7 @@ type Tree struct {
 	closing bool
 }
 
-func NewOrLoad(filename string) (*Tree, error) {
+func NewOrLoad(filename string, readOnly bool) (*Tree, error) {
 	bkTree := &Tree{}
 
 	nodesFilename := fmt.Sprintf("%s.nodes.bin", filename)
@@ -22,8 +22,8 @@ func NewOrLoad(filename string) (*Tree, error) {
 
 	var err error
 
-	bkTree.nodes, err = fileArray.NewFileArray[node](nodesFilename)
-	bkTree.edges, err = fileLinkedList.NewFileLinkedList[edge](edgesFilename)
+	bkTree.nodes, err = fileArray.NewFileArray[node](nodesFilename, readOnly)
+	bkTree.edges, err = fileLinkedList.NewFileLinkedList[edge](edgesFilename, readOnly)
 
 	if err != nil {
 		return nil, err
@@ -118,7 +118,7 @@ func (tree *Tree) PreExpand(length serialization.Length) error {
 		return err
 	}
 
-	err = tree.edges.ExpandElements(length * 2)
+	err = tree.edges.ExpandElements(length)
 	if err != nil {
 		return err
 	}

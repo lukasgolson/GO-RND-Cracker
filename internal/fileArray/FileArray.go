@@ -14,6 +14,7 @@ type FileArray[T serialization.Serializer[T]] struct {
 	header      Header
 	backingFile *os.File
 	count       serialization.Length
+	readOnly    bool
 }
 
 // NewFileArray initializes a new FileArray instance.
@@ -25,8 +26,10 @@ type FileArray[T serialization.Serializer[T]] struct {
 // Returns:
 //   - *FileArray: A pointer to the FileArray instance.
 //   - error: An error if initialization fails.
-func NewFileArray[T serialization.Serializer[T]](filename string) (*FileArray[T], error) {
+func NewFileArray[T serialization.Serializer[T]](filename string, readOnly bool) (*FileArray[T], error) {
 	fileArray := &FileArray[T]{}
+
+	fileArray.readOnly = readOnly
 
 	var serializer T
 
@@ -35,7 +38,12 @@ func NewFileArray[T serialization.Serializer[T]](filename string) (*FileArray[T]
 		return nil, err
 	}
 
-	memoryMap, err := openMmap(file)
+	err = upgradeFile(file)
+	if err != nil {
+		return nil, err
+	}
+
+	memoryMap, err := openMmap(file, readOnly)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +97,7 @@ func openAndInitializeFile[T serialization.Serializer[T]](filename string) (*os.
 	return file, nil
 }
 
-// openMmap maps the opened file into memory for read and write access using mmap.
+// openReadWriteMmap maps the opened file into memory for read and write access using mmap.
 //
 // Parameters:
 //   - file: The opened file to be memory-mapped.
@@ -97,13 +105,38 @@ func openAndInitializeFile[T serialization.Serializer[T]](filename string) (*os.
 // Returns:
 //   - mmap.MMap: The memory-mapped region.
 //   - error: An error if memory mapping fails.
-func openMmap(file *os.File) (mmap.MMap, error) {
+func openReadWriteMmap(file *os.File) (mmap.MMap, error) {
 	memoryMap, err := mmap.Map(file, mmap.RDWR, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	return memoryMap, nil
+}
+
+// openReadMmap maps the opened file into memory for read access using mmap.
+//
+// Parameters:
+//   - file: The opened file to be memory-mapped.
+//
+// Returns:
+//   - mmap.MMap: The memory-mapped region.
+//   - error: An error if memory mapping fails.
+func openReadMmap(file *os.File) (mmap.MMap, error) {
+	memoryMap, err := mmap.Map(file, mmap.RDONLY, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	return memoryMap, nil
+}
+
+func openMmap(file *os.File, readOnly bool) (mmap.MMap, error) {
+	if readOnly {
+		return openReadMmap(file)
+	} else {
+		return openReadWriteMmap(file)
+	}
 }
 
 // Count returns the current count of elements stored in the FileArray instance.
@@ -118,10 +151,16 @@ func (fileArray *FileArray[T]) setCount(value serialization.Length) {
 }
 
 // setCount sets the count of elements in the FileArray to the specified value.
-func (fileArray *FileArray[T]) saveCount() {
+func (fileArray *FileArray[T]) saveCount() error {
+
+	if fileArray.readOnly {
+		return fmt.Errorf("cannot save count to read-only file")
+	}
 
 	counterSlice := fileArray.getCounterSlice()
 	binary.LittleEndian.PutUint64(counterSlice, uint64(fileArray.count))
+
+	return nil
 }
 
 // setCount sets the count of elements in the FileArray to the specified value.
@@ -159,7 +198,11 @@ func (fileArray *FileArray[T]) getCounterSlice() []byte {
 // Returns:
 //   - error: An error if the expansion fails.
 func (fileArray *FileArray[T]) expandMemoryMapSize(expansionSize int64) error {
-	fileArray.saveCount()
+	err := fileArray.saveCount()
+
+	if err != nil {
+		return err
+	}
 
 	currentSize, err := fileArray.backingFile.Seek(0, io.SeekEnd)
 	if err != nil {
@@ -240,11 +283,14 @@ func (fileArray *FileArray[T]) Expand(items serialization.Length) error {
 //   - error: An error if the operation fails.
 func (fileArray *FileArray[T]) shrinkFileSizeToDataSize(itemSize serialization.Length) error {
 
-	fileArray.saveCount()
+	err := fileArray.saveCount()
+	if err != nil {
+		return err
+	}
 
 	dataSize := int64(itemSize*fileArray.Count()) + headerLength
 
-	err := (*fileArray).Unmap()
+	err = (*fileArray).Unmap()
 	if err != nil {
 		return err
 	}
@@ -300,13 +346,35 @@ func (fileArray *FileArray[T]) GetFileName() string {
 func (fileArray *FileArray[T]) Unmap() error {
 
 	if fileArray.memoryMap != nil {
-		fileArray.saveCount()
+
+		if !fileArray.readOnly {
+			err := fileArray.saveCount()
+			if err != nil {
+				return err
+			}
+		}
 
 		err := fileArray.memoryMap.Unmap()
 		if err != nil {
 			return err
 		}
 	}
+
+	return nil
+}
+
+func (fileArray *FileArray[T]) Reopen(readOnly bool) error {
+	err := fileArray.Unmap()
+	if err != nil {
+		return err
+	}
+
+	mMap, err := openMmap(fileArray.backingFile, readOnly)
+	if err != nil {
+		return err
+	}
+
+	fileArray.memoryMap = mMap
 
 	return nil
 }
