@@ -126,3 +126,8 @@ func (tree *Tree) PreExpand(length serialization.Length) error {
 	return nil
 
 }
+
+func (tree *Tree) Prefetch() {
+	tree.nodes.Prefetch()
+	tree.edges.Prefetch()
+}

@@ -17,7 +17,7 @@ type SeedDistance struct {
 	Distance uint32
 }
 
-func Search(inputFile string, delimiter string, dataDirectories []string, concurrentTrees int, stride int) error {
+func Search(inputFile string, delimiter string, dataDirectories []string, concurrentTrees int, stride int, prefetch bool) error {
 	parsedValues, err := readFileAndParse(inputFile, delimiter, 0, 100)
 	if err != nil {
 		return err
@@ -48,7 +48,14 @@ func Search(inputFile string, delimiter string, dataDirectories []string, concur
 				fmt.Printf("Error loading tree for path %s: %v\n", treePath, err)
 				return
 			} else {
-				fmt.Printf("Loaded tree for path %s\n", treePath)
+				fmt.Printf("Initialized tree for path %s\n", treePath)
+			}
+
+			// Prefetch the tree if needed
+			if prefetch {
+				fmt.Printf("Prefetching tree for path %s\n", treePath)
+				bkTree.Prefetch()
+				fmt.Printf("Prefetching tree for path %s done\n", treePath)
 			}
 
 			for i := len(parsedValues) - 32; i >= 0; i -= stride {
@@ -154,9 +161,19 @@ func readFileAndParse(filename string, delimiter string, minNumber, maxNumber in
 			if err != nil {
 				return nil, err
 			}
-			if num < minNumber || num > maxNumber {
-				return nil, fmt.Errorf("number %d is out of range (%d-%d)", num, minNumber, maxNumber)
+
+			if num < minNumber {
+				num = minNumber
+
+				fmt.Print("Number ", numStr, "is less than minNumber ", minNumber, " Adjusting to ", minNumber, "\n")
 			}
+
+			if num > maxNumber {
+				num = maxNumber
+
+				fmt.Print("Number ", numStr, "is greater than maxNumber ", maxNumber, " Adjusting to ", maxNumber, "\n")
+			}
+
 			byteArray = append(byteArray, byte(num))
 		}
 	}

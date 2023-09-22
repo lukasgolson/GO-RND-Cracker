@@ -378,3 +378,11 @@ func (fileArray *FileArray[T]) Reopen(readOnly bool) error {
 
 	return nil
 }
+
+func (fileArray *FileArray[T]) Prefetch() {
+	// read every byte sequentially
+	for i := 0; i < len(fileArray.memoryMap); i++ {
+		_ = fileArray.memoryMap[i]
+	}
+
+}
