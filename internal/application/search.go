@@ -64,7 +64,7 @@ func Search(inputFile string, delimiter string, dataDirectories []string, concur
 
 				go func(seq []byte) {
 					defer wg.Done() // Ensure we always decrement the wait group
-					
+
 					found, result := searchInTree(seq, bkTree)
 					if found {
 						resultsChan <- result
@@ -161,9 +161,19 @@ func readFileAndParse(filename string, delimiter string, minNumber, maxNumber in
 			if err != nil {
 				return nil, err
 			}
-			if num < minNumber || num > maxNumber {
-				return nil, fmt.Errorf("number %d is out of range (%d-%d)", num, minNumber, maxNumber)
+
+			if num < minNumber {
+				num = minNumber
+
+				fmt.Print("Number ", numStr, "is less than minNumber ", minNumber, " Adjusting to ", minNumber, "\n")
 			}
+
+			if num > maxNumber {
+				num = maxNumber
+
+				fmt.Print("Number ", numStr, "is greater than maxNumber ", maxNumber, " Adjusting to ", maxNumber, "\n")
+			}
+
 			byteArray = append(byteArray, byte(num))
 		}
 	}

@@ -380,8 +380,9 @@ func (fileArray *FileArray[T]) Reopen(readOnly bool) error {
 }
 
 func (fileArray *FileArray[T]) Prefetch() {
-	// read every page of the file into memory
-	for i := 0; i < len(fileArray.memoryMap); i += os.Getpagesize() {
+	// read every byte sequentially
+	for i := 0; i < len(fileArray.memoryMap); i++ {
 		_ = fileArray.memoryMap[i]
 	}
+
 }
