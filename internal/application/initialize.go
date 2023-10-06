@@ -26,6 +26,13 @@ func processPartition(lo, hi, fileCount int64, graphPath string, randSource *ran
 		}
 		startSeed := lo + (fileIndex * seedsPerFile)
 		endSeed := startSeed + seedsPerFile
+
+
+		if fileIndex < overlapPerFile {
+			endSeed++
+		}
+
+
 		loadedSeedPosition := serialization.Length(lo) + bkTree.Length()
 
 		if bkTree.Length() > 0 {
@@ -108,12 +115,18 @@ func Initialize(coreCount int, fileCount int, seedCount int64, dataDirectories [
 	var wg sync.WaitGroup
 
 	partitionSize := seedCount / int64(coreCount)
-
 	filesPerPartition := int64(fileCount) / int64(coreCount)
+
+	overlapPerCore := seedCount % int64(coreCount)
+	overlapPerFile := seedCount % int64(fileCount)
 
 	for p := int64(0); p < int64(coreCount); p++ {
 		lo := partitionSize * p
 		hi := partitionSize * (p + 1)
+
+		if p < overlapPerCore {
+			hi++
+		}
 
 		dirIndex := int(p) % len(dataDirectories)
 		dataDirectory := dataDirectories[dirIndex]
