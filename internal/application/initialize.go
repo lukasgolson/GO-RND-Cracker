@@ -10,7 +10,7 @@ import (
 	"sync"
 )
 
-func processPartition(lo, hi, fileCount int64, graphPath string, randSource *rand.Rand) error {
+func processPartition(lo, hi, fileCount, overlapPerFile int64, graphPath string, randSource *rand.Rand) error {
 	numberOfSeeds := hi - lo
 
 	if fileCount > numberOfSeeds {
@@ -138,7 +138,7 @@ func Initialize(coreCount int, fileCount int, seedCount int64, dataDirectories [
 			randSource := rand.New(rand.NewSource(0))
 			dir := fmt.Sprintf("%s/graph-%d", dataDirectory, partitionID)
 
-			if err := processPartition(lo, hi, filesPerPartition, dir, randSource); err != nil {
+			if err := processPartition(lo, hi, filesPerPartition, overlapPerFile, dir, randSource); err != nil {
 				log.Printf("Error processing partition: %v\n", err)
 			}
 		}(lo, hi, p)
