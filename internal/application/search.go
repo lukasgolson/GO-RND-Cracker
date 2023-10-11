@@ -134,7 +134,7 @@ func findNodesFiles(dataPath string) ([]string, error) {
 }
 
 func FindClosestInTree(bkTree *tree.Tree, sequence []byte) (found bool, seed int32, distance uint32) {
-	result := bkTree.FindClosestElement([32]byte(sequence), 16)
+	result := bkTree.FindClosestElement([32]byte(sequence), distance)
 
 	if result.Distance != math.MaxUint32 {
 		return true, result.Seed, result.Distance
