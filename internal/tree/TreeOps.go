@@ -57,47 +57,44 @@ func (tree *Tree) Add(word [NodeWordSize]byte, seed int32) error {
 	}
 }
 
-
-
 func (tree *Tree) FindClosestElement(word [NodeWordSize]byte, maxDistance uint32) SearchResult {
 	if tree.nodes.Count() == 0 {
 		return SearchResult{[NodeWordSize]byte{}, 0, math.MaxUint32}
 	}
 
-	// Removed preallocation of nodesArray to simplify
-	nodes := []serialization.Offset{0}  // Added root node directly
-	var bestWord node
-	bestDistance := maxDistance
+	nodes := make([]serialization.Offset, 0) // Set of nodes to process
+	nodes = append(nodes, 0)                 // Insert the root node into nodes
+	bestWord := node{}                       // Best matching element
+	bestDistance := maxDistance              // Best matching distance, initialized to maxDistance
 
-	// Combined the node popping and nodeID retrieval into one step
-	for len(nodes) > 0 {
-		nodeID, nodes := nodes[len(nodes)-1], nodes[:len(nodes)-1]
-		
+	for len(nodes) != 0 {
+		nodeID := nodes[len(nodes)-1] // Pop the last node from nodes
+		nodes = nodes[:len(nodes)-1]
+
 		n, err := tree.getNodeByIndex(nodeID)
+
 		if err != nil {
 			return SearchResult{[NodeWordSize]byte{}, 0, math.MaxUint32}
 		}
 
 		dU := algorithms.MeyersDifferenceAlgorithm(n.Word[:], word[:])
 
-		// Removed unnecessary block
 		if dU < bestDistance {
-			bestWord, bestDistance = n, dU
-			if bestDistance == 0 {
-				break
-			}
+
+			bestWord, err = tree.getNodeByIndex(nodeID)
+			bestDistance = dU
 		}
 
-		// Replaced egressArcs with inline function call
 		for _, edge := range tree.getEgressArcs(nodeID) {
+			v := edge.ChildIndex
 			dUV := uint32(util.Abs(int32(edge.Distance) - int32(dU)))
-			if dUV <= bestDistance {
-				nodes = append(nodes, edge.ChildIndex)
+
+			if dUV < bestDistance {
+				nodes = append(nodes, v) // Insert v into nodes
 			}
 		}
 	}
 
-	// Removed unnecessary check for bestDistance
 	if bestDistance == maxDistance {
 		return SearchResult{[NodeWordSize]byte{}, 0, math.MaxUint32}
 	}
