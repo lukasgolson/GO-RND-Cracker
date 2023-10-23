@@ -1,9 +1,9 @@
 package application
 
 import (
-	"awesomeProject/internal/serialization"
 	"awesomeProject/internal/tree"
 	"fmt"
+	"github.com/lukasgolson/FileArray/serialization"
 	"log"
 	"math/rand"
 	"os"
@@ -27,11 +27,9 @@ func processPartition(lo, hi, fileCount, overlapPerFile int64, graphPath string,
 		startSeed := lo + (fileIndex * seedsPerFile)
 		endSeed := startSeed + seedsPerFile
 
-
 		if fileIndex < overlapPerFile {
 			endSeed++
 		}
-
 
 		loadedSeedPosition := serialization.Length(lo) + bkTree.Length()
 

@@ -2,8 +2,8 @@ package tree
 
 import (
 	"awesomeProject/internal/algorithms"
-	"awesomeProject/internal/serialization"
 	"awesomeProject/internal/util"
+	"github.com/lukasgolson/FileArray/serialization"
 	"math"
 )
 

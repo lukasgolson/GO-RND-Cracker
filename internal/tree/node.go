@@ -1,8 +1,8 @@
 package tree
 
 import (
-	"awesomeProject/internal/serialization"
 	"encoding/binary"
+	"github.com/lukasgolson/FileArray/serialization"
 )
 
 const NodeWordSize = 32
