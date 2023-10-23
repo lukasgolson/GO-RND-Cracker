@@ -52,7 +52,7 @@ var genCmd = &cobra.Command{
 			panic(err)
 		}
 
-		sequence := application.GenerateRandomSequence(int64(seed), int64(length), rand.New(rand.NewSource(0)))
+		sequence := application.GenerateRandomSequence(int64(seed), int64(length), 100, rand.New(rand.NewSource(0)))
 
 		if csv {
 			csvString, err := application.FormatByteArrayAsCSV(sequence)

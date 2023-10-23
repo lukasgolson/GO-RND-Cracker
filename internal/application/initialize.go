@@ -40,7 +40,7 @@ func processPartition(lo, hi, fileCount, overlapPerFile int64, graphPath string,
 
 				fmt.Println("Previous tree is in range. Everything is fine.")
 
-				const seedOverlap = 5
+				const seedOverlap = 5 // the number of seeds that overlap between trees to ensure that we don't miss any seeds when loading existing trees.
 
 				newStartSeed := int64(loadedSeedPosition) - seedOverlap
 
@@ -51,7 +51,7 @@ func processPartition(lo, hi, fileCount, overlapPerFile int64, graphPath string,
 				startSeed = newStartSeed
 
 			} else if loadedSeedPosition < serialization.Length(startSeed) {
-				return fmt.Errorf("previous tree ends before our start seed")
+				return fmt.Errorf("previous tree ends before our start seed. Ensure that you are using the the same settings as you used to generate the previous tree")
 			} else if loadedSeedPosition > serialization.Length(endSeed) {
 				return fmt.Errorf("previous tree ends after our end seed")
 			}
@@ -63,8 +63,8 @@ func processPartition(lo, hi, fileCount, overlapPerFile int64, graphPath string,
 			}
 		}
 
-		for seed := startSeed; seed < endSeed; seed++ {
-			sequence := GenerateRandomSequence(seed, 32, randSource)
+		for seed := startSeed; seed <= endSeed; seed++ {
+			sequence := GenerateRandomSequence(seed, 32, 100, randSource)
 
 			err := bkTree.Add([32]byte(sequence), int32(seed))
 			if err != nil {
@@ -72,10 +72,7 @@ func processPartition(lo, hi, fileCount, overlapPerFile int64, graphPath string,
 			}
 		}
 
-		err = bkTree.ShrinkWrap()
-		if err != nil {
-			return err
-		}
+		err = bkTree.Close()
 	}
 
 	return nil
@@ -85,6 +82,10 @@ func Initialize(coreCount int, fileCount int, seedCount int64, dataDirectories [
 
 	if fileCount < 1 {
 		return fmt.Errorf("file count must be at least 1")
+	}
+
+	if coreCount < 1 {
+		return fmt.Errorf("core count must be at least 1")
 	}
 
 	if fileCount < coreCount {
