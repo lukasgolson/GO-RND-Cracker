@@ -10,7 +10,7 @@ import (
 	"sync"
 )
 
-func processPartition(lo, hi, fileCount, overlapPerFile int64, graphPath string, randSource *rand.Rand) error {
+func processPartition(lo, hi, fileCount int64, graphPath string, randSource *rand.Rand) error {
 	numberOfSeeds := hi - lo
 
 	if fileCount > numberOfSeeds {
@@ -26,10 +26,6 @@ func processPartition(lo, hi, fileCount, overlapPerFile int64, graphPath string,
 		}
 		startSeed := lo + (fileIndex * seedsPerFile)
 		endSeed := startSeed + seedsPerFile
-
-		if fileIndex < overlapPerFile {
-			endSeed++
-		}
 
 		loadedSeedPosition := serialization.Length(lo) + bkTree.Length()
 
@@ -84,20 +80,16 @@ func Initialize(coreCount int, fileCount int, seedCount int64, dataDirectories [
 		return fmt.Errorf("file count must be at least 1")
 	}
 
+	if seedCount < 1 {
+		return fmt.Errorf("seed count must be at least 1")
+	}
+
 	if coreCount < 1 {
 		return fmt.Errorf("core count must be at least 1")
 	}
 
-	if fileCount < coreCount {
-		return fmt.Errorf("file count must be greater than or equal to the core count")
-	}
-
 	if fileCount%coreCount != 0 {
 		return fmt.Errorf("file count must be divisible by the core count")
-	}
-
-	if seedCount < 1 {
-		return fmt.Errorf("seed count must be at least 1")
 	}
 
 	if int64(fileCount) > seedCount {
@@ -117,8 +109,6 @@ func Initialize(coreCount int, fileCount int, seedCount int64, dataDirectories [
 	filesPerPartition := int64(fileCount) / int64(coreCount)
 
 	overlapPerCore := seedCount % int64(coreCount)
-	overlapPerFile := seedCount % int64(fileCount)
-
 	for p := int64(0); p < int64(coreCount); p++ {
 		lo := partitionSize * p
 		hi := partitionSize * (p + 1)
@@ -137,7 +127,7 @@ func Initialize(coreCount int, fileCount int, seedCount int64, dataDirectories [
 			randSource := rand.New(rand.NewSource(0))
 			dir := fmt.Sprintf("%s/graph-%d", dataDirectory, partitionID)
 
-			if err := processPartition(lo, hi, filesPerPartition, overlapPerFile, dir, randSource); err != nil {
+			if err := processPartition(lo, hi, filesPerPartition, dir, randSource); err != nil {
 				log.Printf("Error processing partition: %v\n", err)
 			}
 		}(lo, hi, p)
