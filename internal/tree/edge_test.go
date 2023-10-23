@@ -1,7 +1,7 @@
 package tree
 
 import (
-	"awesomeProject/internal/serialization"
+	"github.com/lukasgolson/FileArray/serialization"
 	"testing"
 )
 

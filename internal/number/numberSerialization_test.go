@@ -1,9 +1,9 @@
 package number
 
 import (
-	"awesomeProject/internal/serialization"
 	"bytes"
 	"encoding/binary"
+	"github.com/lukasgolson/FileArray/serialization"
 	"testing"
 )
 

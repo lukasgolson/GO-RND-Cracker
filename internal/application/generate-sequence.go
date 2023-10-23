@@ -1,7 +1,7 @@
 package application
 
 import (
-	"awesomeProject/internal/serialization"
+	"github.com/lukasgolson/FileArray/serialization"
 	"math/rand"
 )
 

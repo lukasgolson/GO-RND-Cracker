@@ -1,8 +1,6 @@
 package tree
 
-import (
-	"awesomeProject/internal/serialization"
-)
+import "github.com/lukasgolson/FileArray/serialization"
 
 func (tree *Tree) getNextNodeID() uint32 {
 	return uint32(tree.nodes.Count())

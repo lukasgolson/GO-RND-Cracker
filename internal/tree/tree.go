@@ -1,10 +1,10 @@
 package tree
 
 import (
-	"awesomeProject/internal/fileArray"
-	"awesomeProject/internal/fileLinkedList"
-	"awesomeProject/internal/serialization"
 	"fmt"
+	"github.com/lukasgolson/FileArray/fileArray"
+	"github.com/lukasgolson/FileArray/fileLinkedList"
+	"github.com/lukasgolson/FileArray/serialization"
 )
 
 type Tree struct {

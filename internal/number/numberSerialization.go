@@ -1,8 +1,8 @@
 package number
 
 import (
-	"awesomeProject/internal/serialization"
 	"encoding/binary"
+	"github.com/lukasgolson/FileArray/serialization"
 )
 
 type Number struct {
