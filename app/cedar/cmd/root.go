@@ -146,8 +146,8 @@ func init() {
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.Flags().Bool("toggle", false, "Help message for toggle")
 	rootCmd.PersistentFlags().IntP("cores", "c", runtime.NumCPU(), "The number of CPU cores to use during processing")
-	rootCmd.PersistentFlags().BoolP("quiet", "q", false, "Disables all superficial command text")
-	rootCmd.PersistentFlags().BoolP("pgo", "o", false, "Enables profile-guided optimization (PGO) output")
+	rootCmd.PersistentFlags().Bool("quiet", false, "Disables all superficial command text")
+	rootCmd.PersistentFlags().Bool("pgo", false, "Enables profile-guided optimization (PGO) output")
 }

@@ -52,7 +52,17 @@ var genCmd = &cobra.Command{
 			panic(err)
 		}
 
-		sequence := application.GenerateRandomSequence(int64(seed), int64(length), rand.New(rand.NewSource(0)))
+		high, err := cmd.Flags().GetInt("sequenceHigh")
+		if err != nil {
+			panic(err)
+		}
+
+		offset, err := cmd.Flags().GetInt("sequenceOffset")
+		if err != nil {
+			panic(err)
+		}
+
+		sequence := application.GenerateRandomSequence(int64(seed), int64(length), high, offset, rand.New(rand.NewSource(0)))
 
 		if csv {
 			csvString, err := application.FormatByteArrayAsCSV(sequence)
@@ -85,4 +95,7 @@ func init() {
 	genCmd.Flags().IntP("seed", "s", 0, "The seed to use when generating the sequence")
 	genCmd.Flags().IntP("length", "l", 32, "The length of the sequence to generate")
 	genCmd.Flags().BoolP("csv", "e", false, "Format the output as a CSV record")
+
+	genCmd.Flags().IntP("sequenceHigh", "u", 100, "Upper bound on the sequence elements")
+	genCmd.Flags().IntP("sequenceOffset", "o", 1, "Offset to add to the sequence elements")
 }

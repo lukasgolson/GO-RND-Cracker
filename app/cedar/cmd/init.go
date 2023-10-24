@@ -24,6 +24,7 @@ package cmd
 import (
 	"awesomeProject/internal/application"
 	"github.com/spf13/cobra"
+	"math"
 	"runtime"
 )
 
@@ -58,7 +59,17 @@ Note that this command will take a long time to complete, and will use a lot of 
 			panic(err)
 		}
 
-		err = application.Initialize(coreCount, fileCount, seedCount, directory)
+		sequenceHigh, err := cmd.Flags().GetInt("sequenceHigh")
+		if err != nil {
+			panic(err)
+		}
+
+		sequenceOffset, err := cmd.Flags().GetInt("sequenceOffset")
+		if err != nil {
+			panic(err)
+		}
+
+		err = application.Initialize(coreCount, fileCount, seedCount, sequenceHigh, sequenceOffset, directory)
 		if err != nil {
 			panic(err)
 		}
@@ -79,6 +90,10 @@ func init() {
 	// initCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
 	initCmd.Flags().IntP("files", "f", runtime.NumCPU(), "Number of file partitions to split the seed space into")
-	initCmd.Flags().Int64P("seedCount", "s", 1<<31-1, "Upper bound on the number of seeds to generate")
+	initCmd.Flags().Int64P("seedCount", "s", math.MaxInt32, "Upper bound on the number of seeds to generate")
+
+	initCmd.Flags().IntP("sequenceHigh", "u", 100, "Upper bound on the sequence elements")
+	initCmd.Flags().IntP("sequenceOffset", "o", 1, "Offset to add to the sequence elements")
+
 	initCmd.Flags().StringArrayP("directory", "d", []string{"data"}, "The directories to store the lookup graphs in")
 }
