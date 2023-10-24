@@ -17,8 +17,8 @@ type SeedDistance struct {
 	Distance uint32
 }
 
-func Search(inputFile string, delimiter string, dataDirectories []string, concurrentTrees int, stride int, prefetch bool) error {
-	parsedValues, err := readFileAndParse(inputFile, delimiter, 0, 100)
+func Search(inputFile string, delimiter string, dataDirectories []string, concurrentTrees int, stride int, searchDistance uint32, prefetch bool) error {
+	parsedValues, err := readFileAndParse(inputFile, delimiter, 0, 255)
 	if err != nil {
 		return err
 	}
@@ -65,7 +65,7 @@ func Search(inputFile string, delimiter string, dataDirectories []string, concur
 				go func(seq []byte) {
 					defer wg.Done() // Ensure we always decrement the wait group
 
-					found, result := searchInTree(seq, bkTree)
+					found, result := searchInTree(seq, searchDistance, bkTree)
 					if found {
 						resultsChan <- result
 					}
@@ -95,9 +95,9 @@ func Search(inputFile string, delimiter string, dataDirectories []string, concur
 	return nil
 }
 
-func searchInTree(sequence []byte, bkTree *tree.Tree) (bool, SeedDistance) {
+func searchInTree(sequence []byte, searchDistance uint32, bkTree *tree.Tree) (bool, SeedDistance) {
 
-	found, seed, distance := FindClosestInTree(bkTree, sequence)
+	found, seed, distance := FindClosestInTree(bkTree, sequence, searchDistance)
 	if found {
 		return found, SeedDistance{Seed: seed, Distance: distance}
 	} else {
@@ -133,8 +133,8 @@ func findNodesFiles(dataPath string) ([]string, error) {
 	return nodesFiles, nil
 }
 
-func FindClosestInTree(bkTree *tree.Tree, sequence []byte) (found bool, seed int32, distance uint32) {
-	result := bkTree.FindClosestElement([32]byte(sequence), distance)
+func FindClosestInTree(bkTree *tree.Tree, sequence []byte, maxSearchDistance uint32) (found bool, seed int32, resultDistance uint32) {
+	result := bkTree.FindClosestElement([32]byte(sequence), maxSearchDistance)
 
 	if result.Distance != math.MaxUint32 {
 		return true, result.Seed, result.Distance
