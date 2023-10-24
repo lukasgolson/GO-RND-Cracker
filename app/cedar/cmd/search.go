@@ -67,6 +67,11 @@ var searchCmd = &cobra.Command{
 			panic(err)
 		}
 
+		searchDistance, err := cmd.Flags().GetUint32("distance")
+		if err != nil {
+			panic(err)
+		}
+
 		var deliminator string
 
 		if isCSV {
@@ -84,7 +89,7 @@ var searchCmd = &cobra.Command{
 
 		}
 
-		err = application.Search(inputFile, deliminator, directory, concurrentTrees, stride, prefetch)
+		err = application.Search(inputFile, deliminator, directory, concurrentTrees, stride, searchDistance, prefetch)
 		if err != nil {
 			panic(err)
 		}
@@ -101,5 +106,6 @@ func init() {
 	searchCmd.Flags().IntP("concurrent", "m", 1, "The number of concurrent trees to search")
 	searchCmd.Flags().IntP("stride", "s", 16, "The stride length to use when searching")
 	searchCmd.Flags().BoolP("prefetch", "p", false, "Prefetch the current tree into memory before searching")
+	searchCmd.Flags().Uint32P("distance", "t", 16, "The maximum distance to search for")
 
 }
