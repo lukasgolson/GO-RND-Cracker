@@ -81,5 +81,9 @@ func init() {
 
 	initCmd.Flags().IntP("files", "f", runtime.NumCPU(), "Number of file partitions to split the seed space into")
 	initCmd.Flags().Int64P("seedCount", "s", math.MaxInt32, "Upper bound on the number of seeds to generate")
+
+	initCmd.Flags().Int32P("sequenceHigh", "h", 100, "Upper bound on the sequence elements")
+	initCmd.Flags().Int32P("sequenceOffset", "o", 1, "Offset to add to the sequence elements")
+
 	initCmd.Flags().StringArrayP("directory", "d", []string{"data"}, "The directories to store the lookup graphs in")
 }

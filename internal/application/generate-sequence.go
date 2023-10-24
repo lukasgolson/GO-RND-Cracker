@@ -5,13 +5,13 @@ import (
 	"math/rand"
 )
 
-func GenerateRandomSequence(seed int64, length int64, high int, randSource *rand.Rand) []byte {
+func GenerateRandomSequence(seed int64, length int64, high, offset int, randSource *rand.Rand) []byte {
 	randSource.Seed(seed)
 
 	byteArray := make([]byte, length)
 
 	for i := serialization.Length(0); i < serialization.Length(length); i++ {
-		val := randSource.Intn(high)
+		val := randSource.Intn(high) + offset
 		byteArray[i] = byte(val)
 	}
 

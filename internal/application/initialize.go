@@ -10,8 +10,8 @@ import (
 	"sync"
 )
 
-func processPartition(lo, hi, fileCount int64, graphPath string, randSource *rand.Rand) error {
-	numberOfSeeds := hi - lo
+func processPartition(seedSpaceLow, seedSpaceHigh, fileCount int64, sequenceHigh, sequenceOffset int, graphPath string, randSource *rand.Rand) error {
+	numberOfSeeds := seedSpaceHigh - seedSpaceLow
 
 	if fileCount > numberOfSeeds {
 		fileCount = numberOfSeeds
@@ -24,10 +24,10 @@ func processPartition(lo, hi, fileCount int64, graphPath string, randSource *ran
 		if err != nil {
 			return err
 		}
-		startSeed := lo + (fileIndex * seedsPerFile)
+		startSeed := seedSpaceLow + (fileIndex * seedsPerFile)
 		endSeed := startSeed + seedsPerFile
 
-		loadedSeedPosition := serialization.Length(lo) + bkTree.Length()
+		loadedSeedPosition := serialization.Length(seedSpaceLow) + bkTree.Length()
 
 		if bkTree.Length() > 0 {
 			fmt.Println("Loading existing tree... Start seed", startSeed, "end seed:", endSeed, "previous end seed:", loadedSeedPosition)
@@ -60,7 +60,7 @@ func processPartition(lo, hi, fileCount int64, graphPath string, randSource *ran
 		}
 
 		for seed := startSeed; seed <= endSeed; seed++ {
-			sequence := GenerateRandomSequence(seed, 32, 100, randSource)
+			sequence := GenerateRandomSequence(seed, 32, sequenceHigh, sequenceOffset, randSource)
 
 			err := bkTree.Add([32]byte(sequence), int32(seed))
 			if err != nil {
@@ -74,7 +74,7 @@ func processPartition(lo, hi, fileCount int64, graphPath string, randSource *ran
 	return nil
 }
 
-func Initialize(coreCount int, fileCount int, seedCount int64, dataDirectories []string) error {
+func Initialize(coreCount, fileCount int, seedCount int64, sequenceHigh, sequenceOffset int, dataDirectories []string) error {
 
 	if fileCount < 1 {
 		return fmt.Errorf("file count must be at least 1")
@@ -122,12 +122,12 @@ func Initialize(coreCount int, fileCount int, seedCount int64, dataDirectories [
 
 		wg.Add(1)
 
-		go func(lo, hi int64, partitionID int64) {
+		go func(seedSpaceLow, seedSpaceHigh int64, partitionID int64) {
 			defer wg.Done()
 			randSource := rand.New(rand.NewSource(0))
 			dir := fmt.Sprintf("%s/graph-%d", dataDirectory, partitionID)
 
-			if err := processPartition(lo, hi, filesPerPartition, dir, randSource); err != nil {
+			if err := processPartition(seedSpaceLow, seedSpaceHigh, filesPerPartition, sequenceHigh, sequenceOffset, dir, randSource); err != nil {
 				log.Printf("Error processing partition: %v\n", err)
 			}
 		}(lo, hi, p)
