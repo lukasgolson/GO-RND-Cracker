@@ -96,6 +96,6 @@ func init() {
 	genCmd.Flags().IntP("length", "l", 32, "The length of the sequence to generate")
 	genCmd.Flags().BoolP("csv", "e", false, "Format the output as a CSV record")
 
-	genCmd.Flags().IntP("sequenceHigh", "h", 100, "Upper bound on the sequence elements")
+	genCmd.Flags().IntP("sequenceHigh", "u", 100, "Upper bound on the sequence elements")
 	genCmd.Flags().IntP("sequenceOffset", "o", 1, "Offset to add to the sequence elements")
 }
